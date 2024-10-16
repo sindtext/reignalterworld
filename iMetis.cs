@@ -17,8 +17,12 @@ public class iMetis : MonoBehaviour
     LobbyManager lm;
 
     SmartContract METIS;
-    SmartContract metisFaucet;
+    string metisAddress;
     string metisABI;
+    SmartContract metisFaucet;
+    string metisFaucetAddress;
+    string metisFaucetABI;
+
     string RAWStore;
 
     JsonRpcProvider provider;
@@ -46,8 +50,8 @@ public class iMetis : MonoBehaviour
 
     public void metisContract()
     {
-        METIS = new SmartContract(RAWStore, metisABI, eWallet.call.metiswallet, true);
-        metisFaucet = new SmartContract(RAWStore, metisABI, eWallet.call.metiswallet, true);
+        METIS = new SmartContract(metisAddress, metisABI, eWallet.call.metiswallet, true);
+        metisFaucet = new SmartContract(metisFaucetAddress, metisFaucetABI, eWallet.call.metiswallet, true);
         metisConnect();
     }
 
