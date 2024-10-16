@@ -17,9 +17,9 @@ public class iMetis : MonoBehaviour
     LobbyManager lm;
 
     SmartContract METIS;
+    SmartContract metisFaucet;
     string metisABI;
     string RAWStore;
-    SmartContract metisFaucet;
 
     JsonRpcProvider provider;
 
