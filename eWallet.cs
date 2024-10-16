@@ -25,12 +25,14 @@ public class eWallet : MonoBehaviour
     public GameObject rawbankBtn;
     public GameObject u2uFObj;
     public GameObject metisFObj;
+    public GameObject emcFObj;
 
     public string skaleID;
     public string skaleKey;
     public EmbeddedWallet wallet;
     public EmbeddedWallet u2uwallet;
     public EmbeddedWallet metiswallet;
+    public EmbeddedWallet emcwallet;
 
     public string account;
 
@@ -120,6 +122,7 @@ public class eWallet : MonoBehaviour
             wallet = new EmbeddedWallet(signer, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
             u2uwallet = new EmbeddedWallet(signer, "2484", new JsonRpcProvider("https://rpc-nebulas-testnet.uniultra.xyz/"));
             metiswallet = new EmbeddedWallet(signer, "59902", new JsonRpcProvider("https://sepolia.metisdevops.link"));
+            emcwallet = new EmbeddedWallet(signer, "99876", new JsonRpcProvider("https://rpc1-testnet.emc.network"));
 
             account = wallet.GetAddress();
             statusText.text = "Logged in Successfully! Connected Address: " + account;
