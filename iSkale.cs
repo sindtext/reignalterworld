@@ -9,6 +9,7 @@ using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
+
 public class iSkale : MonoBehaviour
 {
     public static iSkale call;
@@ -78,8 +79,8 @@ public class iSkale : MonoBehaviour
     public async void sConnect()
     {
         statusText.text = "Connecting to SKALE...";
-        EmbeddedWallet swallet = new EmbeddedWallet(sRAWFaucetManager.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
-        sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, swallet);
+        EmbeddedWallet faucetwallet = new EmbeddedWallet(sRAWFaucetManager.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
+        sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
 
         var currentGasBalance = await provider.GetBalance(eWallet.call.account);
         sFuelDisplay.text = ": " + currentGasBalance.ToString();
