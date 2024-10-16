@@ -63,7 +63,7 @@ public class iMetis : MonoBehaviour
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
             statusText.text = "METIS Connected Successfully!";
-            Sign("Connect to Reign Alter World Store");
+            metisSign("Connect to Reign Alter World Store");
         }
         else
         {
@@ -75,7 +75,7 @@ public class iMetis : MonoBehaviour
     }
 
     // You can also have users sign messages using Embedded wallets:
-    public async void Sign(string message)
+    public async void metisSign(string message)
     {
         // This will return a signature
         string signature = await eWallet.call.metiswallet.SignMessage(message);
@@ -84,7 +84,7 @@ public class iMetis : MonoBehaviour
         lm.exeLoader.SetActive(false);
     }
 
-    public async Task<BigInteger> gldAllowance<BigInteger>(string owner, string spender)
+    public async Task<BigInteger> metisAllowance<BigInteger>(string owner, string spender)
     {
         string methodName = "allowance";
 
@@ -106,7 +106,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async Task<string> gldApprove(string spender, BigInteger value)
+    public async Task<string> metisApprove(string spender, BigInteger value)
     {
         string methodName = "approve";
 
@@ -128,7 +128,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async void gldTransfer(string spender, BigInteger value)
+    public async void metisTransfer(string spender, BigInteger value)
     {
         string methodName = "transfer";
 
