@@ -10,18 +10,18 @@ using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
 
-public class iMetis : MonoBehaviour
+public class iAtom : MonoBehaviour
 {
-    public static iMetis call;
+    public static iAtom call;
 
     LobbyManager lm;
 
-    SmartContract METIS;
-    string metisAddress;
-    string metisABI;
-    SmartContract metis0Gas;
-    string metis0GasAddress;
-    string metis0GasABI;
+    SmartContract Atom;
+    string atomAddress;
+    string atomABI;
+    SmartContract atom0Gas;
+    string atom0GasAddress;
+    string atom0GasABI;
 
     JsonRpcProvider provider;
 
@@ -29,7 +29,7 @@ public class iMetis : MonoBehaviour
     public rawBankManager rbm;
 
     public TextMeshProUGUI statusText;
-    public TMP_Text metisDisplay;
+    public TMP_Text atomDisplay;
 
     private void Awake()
     {
@@ -42,51 +42,51 @@ public class iMetis : MonoBehaviour
     private void Start()
     {
         lm = FindObjectOfType<LobbyManager>();
-        provider = new JsonRpcProvider("https://sepolia.metisdevops.link");
-        metisContract();
+        provider = new JsonRpcProvider("https://rpc-rs.cosmos.nodestake.top");
+        atomContract();
     }
 
-    public void metisContract()
+    public void atomContract()
     {
-        METIS = new SmartContract(metisAddress, metisABI, eWallet.call.metiswallet, true);
-        metis0Gas = new SmartContract(metis0GasAddress, metis0GasABI, eWallet.call.metiswallet, true);
-        metisConnect();
+        Atom = new SmartContract(atomAddress, atomABI, eWallet.call.atomwallet, true);
+        atom0Gas = new SmartContract(atom0GasAddress, atom0GasABI, eWallet.call.atomwallet, true);
+        atomConnect();
     }
 
-    public async void metisConnect()
+    public async void atomConnect()
     {
-        statusText.text = "Connecting to METIS...";
+        statusText.text = "Connecting to Atom...";
 
-        string accnt = eWallet.call.metiswallet.GetAddress();
+        string accnt = eWallet.call.atomwallet.GetAddress();
 
         var gasBalance = await provider.GetBalance(accnt);
-        metisDisplay.text = gasBalance.ToString();
+        atomDisplay.text = gasBalance.ToString();
 
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
-            statusText.text = "METIS Connected Successfully!";
-            metisSign("Connect to Reign Alter World Store");
+            statusText.text = "Atom Connected Successfully!";
+            atomSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim METIS Fauchet!";
-            eWallet.call.metisFObj.SetActive(true);
-            eWallet.call.metisFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
+            statusText.text = "Claim Atom Fauchet!";
+            eWallet.call.atomFObj.SetActive(true);
+            eWallet.call.atomFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
             lm.exeLoader.SetActive(false);
         }
     }
 
     // You can also have users sign messages using Embedded wallets:
-    public async void metisSign(string message)
+    public async void atomSign(string message)
     {
         // This will return a signature
-        string signature = await eWallet.call.metiswallet.SignMessage(message);
+        string signature = await eWallet.call.atomwallet.SignMessage(message);
 
         statusText.text = "Signature: " + signature;
         lm.exeLoader.SetActive(false);
     }
 
-    public async Task<BigInteger> metisAllowance<BigInteger>(string owner, string spender)
+    public async Task<BigInteger> atomAllowance<BigInteger>(string owner, string spender)
     {
         string methodName = "allowance";
 
@@ -97,7 +97,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var status = await METIS.Call<BigInteger>(methodName, arguments);
+            var status = await Atom.Call<BigInteger>(methodName, arguments);
             Debug.Log("Allowance Call Result: " + status);
             return status;
         }
@@ -108,7 +108,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async Task<string> metisApprove(string spender, BigInteger value)
+    public async Task<string> atomApprove(string spender, BigInteger value)
     {
         string methodName = "approve";
 
@@ -119,7 +119,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Atom.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -130,7 +130,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async void metisTransfer(string spender, BigInteger value)
+    public async void atomTransfer(string spender, BigInteger value)
     {
         string methodName = "transfer";
 
@@ -141,7 +141,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Atom.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
         }
         catch (System.Exception e)

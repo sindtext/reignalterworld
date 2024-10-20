@@ -10,18 +10,18 @@ using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
 
-public class iMetis : MonoBehaviour
+public class iEMC : MonoBehaviour
 {
-    public static iMetis call;
+    public static iEMC call;
 
     LobbyManager lm;
 
-    SmartContract METIS;
-    string metisAddress;
-    string metisABI;
-    SmartContract metis0Gas;
-    string metis0GasAddress;
-    string metis0GasABI;
+    SmartContract EMC;
+    string emcAddress;
+    string emcABI;
+    SmartContract emc0Gas;
+    string emc0GasAddress;
+    string emc0GasABI;
 
     JsonRpcProvider provider;
 
@@ -29,7 +29,7 @@ public class iMetis : MonoBehaviour
     public rawBankManager rbm;
 
     public TextMeshProUGUI statusText;
-    public TMP_Text metisDisplay;
+    public TMP_Text emcDisplay;
 
     private void Awake()
     {
@@ -42,51 +42,51 @@ public class iMetis : MonoBehaviour
     private void Start()
     {
         lm = FindObjectOfType<LobbyManager>();
-        provider = new JsonRpcProvider("https://sepolia.metisdevops.link");
-        metisContract();
+        provider = new JsonRpcProvider("https://rpc1-testnet.emc.network");
+        emcContract();
     }
 
-    public void metisContract()
+    public void emcContract()
     {
-        METIS = new SmartContract(metisAddress, metisABI, eWallet.call.metiswallet, true);
-        metis0Gas = new SmartContract(metis0GasAddress, metis0GasABI, eWallet.call.metiswallet, true);
-        metisConnect();
+        EMC = new SmartContract(emcAddress, emcABI, eWallet.call.emcwallet, true);
+        emc0Gas = new SmartContract(emc0GasAddress, emc0GasABI, eWallet.call.emcwallet, true);
+        emcConnect();
     }
 
-    public async void metisConnect()
+    public async void emcConnect()
     {
-        statusText.text = "Connecting to METIS...";
+        statusText.text = "Connecting to EMC...";
 
-        string accnt = eWallet.call.metiswallet.GetAddress();
+        string accnt = eWallet.call.emcwallet.GetAddress();
 
         var gasBalance = await provider.GetBalance(accnt);
-        metisDisplay.text = gasBalance.ToString();
+        emcDisplay.text = gasBalance.ToString();
 
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
-            statusText.text = "METIS Connected Successfully!";
-            metisSign("Connect to Reign Alter World Store");
+            statusText.text = "EMC Connected Successfully!";
+            emcSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim METIS Fauchet!";
-            eWallet.call.metisFObj.SetActive(true);
-            eWallet.call.metisFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
+            statusText.text = "Claim EMC Fauchet!";
+            eWallet.call.emcFObj.SetActive(true);
+            eWallet.call.emcFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
             lm.exeLoader.SetActive(false);
         }
     }
 
     // You can also have users sign messages using Embedded wallets:
-    public async void metisSign(string message)
+    public async void emcSign(string message)
     {
         // This will return a signature
-        string signature = await eWallet.call.metiswallet.SignMessage(message);
+        string signature = await eWallet.call.emcwallet.SignMessage(message);
 
         statusText.text = "Signature: " + signature;
         lm.exeLoader.SetActive(false);
     }
 
-    public async Task<BigInteger> metisAllowance<BigInteger>(string owner, string spender)
+    public async Task<BigInteger> emcAllowance<BigInteger>(string owner, string spender)
     {
         string methodName = "allowance";
 
@@ -97,7 +97,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var status = await METIS.Call<BigInteger>(methodName, arguments);
+            var status = await EMC.Call<BigInteger>(methodName, arguments);
             Debug.Log("Allowance Call Result: " + status);
             return status;
         }
@@ -108,7 +108,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async Task<string> metisApprove(string spender, BigInteger value)
+    public async Task<string> emcApprove(string spender, BigInteger value)
     {
         string methodName = "approve";
 
@@ -119,7 +119,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await EMC.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -130,7 +130,7 @@ public class iMetis : MonoBehaviour
         }
     }
 
-    public async void metisTransfer(string spender, BigInteger value)
+    public async void emcTransfer(string spender, BigInteger value)
     {
         string methodName = "transfer";
 
@@ -141,7 +141,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await EMC.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
         }
         catch (System.Exception e)

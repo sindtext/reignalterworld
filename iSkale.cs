@@ -9,7 +9,6 @@ using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
-
 public class iSkale : MonoBehaviour
 {
     public static iSkale call;
