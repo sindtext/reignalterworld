@@ -4,7 +4,9 @@ U2U Interaction : [U2U](https://github.com/sindtext/reignalterworld/blob/Contrac
 
 METIS Interaction : [METIS](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iMetis.cs)
 
-ATOM/COSMOS Interaction : [METIS](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iAtom.cs)
+EMC Interaction : [EMC](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iEMC.cs)
+
+COSMOS Interaction : [ATOM](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iAtom.cs)
 
 All Smart Contract Reader : [Smart Contract](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
 
