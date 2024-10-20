@@ -26,6 +26,7 @@ public class eWallet : MonoBehaviour
     public GameObject u2uFObj;
     public GameObject metisFObj;
     public GameObject emcFObj;
+    public GameObject atomFObj;
 
     public string skaleID;
     public string skaleKey;
@@ -33,6 +34,7 @@ public class eWallet : MonoBehaviour
     public EmbeddedWallet u2uwallet;
     public EmbeddedWallet metiswallet;
     public EmbeddedWallet emcwallet;
+    public EmbeddedWallet atomwallet;
 
     public string account;
 
