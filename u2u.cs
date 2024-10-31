@@ -20,8 +20,6 @@ public class u2u : MonoBehaviour
     SmartContract RAWBank;
     SmartContract RAWChanger;
     SmartContract u2u0Gas;
-    string u2u0GasAddress;
-    string u2u0GasABI;
 
     JsonRpcProvider provider;
 
@@ -51,7 +49,6 @@ public class u2u : MonoBehaviour
         RAWS = new SmartContract(RAWSSupplyManager.Address, RAWSSupplyManager.ABI, eWallet.call.u2uwallet, true);
         RAWBank = new SmartContract(RawBankManager.Address, RawBankManager.ABI, eWallet.call.u2uwallet, true);
         RAWChanger = new SmartContract(RawChangerManager.Address, RawChangerManager.ABI, eWallet.call.u2uwallet, true);
-        //u2u0Gas = new SmartContract(u2u0GasAddress, u2u0GasABI, eWallet.call.metiswallet, true);
         u2uConnect();
     }
 
@@ -76,9 +73,33 @@ public class u2u : MonoBehaviour
         else
         {
             statusText.text = "Claim U2U Fauchet!";
-            eWallet.call.u2uFObj.SetActive(true);
-            eWallet.call.u2uFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
+
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "2484", new JsonRpcProvider("https://rpc-nebulas-testnet.uniultra.xyz"));
+            u2u0Gas = new SmartContract(rawU2UFaucetManager.Address, rawU2UFaucetManager.ABI, faucetwallet);
+            u2uFauchetCall(eWallet.call.account);
+        }
+    }
+
+    public async void u2uFauchetCall(string receiver)
+    {
+        string methodName = "u2uPay";
+
+        object[] arguments = new object[] {
+            receiver
+        };
+
+        try
+        {
+            var transactionHash = await u2u0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
+
+            statusText.text = "U2U distributed successfully.";
+
             lm.exeLoader.SetActive(false);
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            statusText.text = "U2U distribution failed.";
         }
     }
 

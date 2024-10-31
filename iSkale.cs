@@ -78,7 +78,7 @@ public class iSkale : MonoBehaviour
     public async void sConnect()
     {
         statusText.text = "Connecting to SKALE...";
-        EmbeddedWallet faucetwallet = new EmbeddedWallet(sRAWFaucetManager.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
+        EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
         sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
 
         var currentGasBalance = await provider.GetBalance(eWallet.call.account);

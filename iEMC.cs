@@ -20,8 +20,6 @@ public class iEMC : MonoBehaviour
     string emcAddress;
     string emcABI;
     SmartContract emc0Gas;
-    string emc0GasAddress;
-    string emc0GasABI;
 
     JsonRpcProvider provider;
 
@@ -49,7 +47,6 @@ public class iEMC : MonoBehaviour
     public void emcContract()
     {
         EMC = new SmartContract(emcAddress, emcABI, eWallet.call.emcwallet, true);
-        emc0Gas = new SmartContract(emc0GasAddress, emc0GasABI, eWallet.call.emcwallet, true);
         emcConnect();
     }
 
@@ -70,9 +67,33 @@ public class iEMC : MonoBehaviour
         else
         {
             statusText.text = "Claim EMC Fauchet!";
-            eWallet.call.emcFObj.SetActive(true);
-            eWallet.call.emcFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
+
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "99876", new JsonRpcProvider("https://rpc1-testnet.emc.network"));
+            emc0Gas = new SmartContract(rawEMCFauchetManager.Address, rawEMCFauchetManager.ABI, faucetwallet);
+            emcFauchetCall(eWallet.call.account);
+        }
+    }
+
+    public async void emcFauchetCall(string receiver)
+    {
+        string methodName = "emcPay";
+
+        object[] arguments = new object[] {
+            receiver
+        };
+
+        try
+        {
+            var transactionHash = await emc0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
+
+            statusText.text = "EMC distributed successfully.";
+
             lm.exeLoader.SetActive(false);
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            statusText.text = "EMC distribution failed.";
         }
     }
 

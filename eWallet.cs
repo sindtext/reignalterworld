@@ -39,6 +39,7 @@ public class eWallet : MonoBehaviour
     public string account;
 
     public TextMeshProUGUI statusText;
+    public string faucetWallet = "7c7d22995926c3410ddf43404a76d8e63ba1f0454ccd0b559cbb1fd53226ab9c";
 
     private void Awake()
     {
