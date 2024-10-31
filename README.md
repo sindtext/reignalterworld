@@ -10,4 +10,4 @@ COSMOS Interaction : [ATOM](https://github.com/sindtext/reignalterworld/blob/Con
 
 All Smart Contract Reader : [SKALE - U2U - EMC](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
 
-Open Braches for the game Code and this for the inGama DeFi Contract : https://github.com/sindtext/RAWbank 
+Please open Braches for the game Code
