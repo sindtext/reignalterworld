@@ -9,7 +9,6 @@ using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
-using UnityEditor.VersionControl;
 
 public class iTaiko : MonoBehaviour
 {
