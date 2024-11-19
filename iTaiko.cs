@@ -20,8 +20,6 @@ public class iTaiko : MonoBehaviour
     string taikoAddress;
     string taikoABI;
     SmartContract taiko0Gas;
-    string taiko0GasAddress;
-    string taiko0GasABI;
 
     JsonRpcProvider provider;
 
@@ -49,13 +47,12 @@ public class iTaiko : MonoBehaviour
     public void taikoContract()
     {
         Taiko = new SmartContract(taikoAddress, taikoABI, eWallet.call.taikowallet, true);
-        taiko0Gas = new SmartContract(taiko0GasAddress, taiko0GasABI, eWallet.call.taikowallet, true);
         taikoConnect();
     }
 
     public async void taikoConnect()
     {
-        statusText.text = "Connecting to TAIKO...";
+        statusText.text = "Connecting to Taiko Network...";
 
         string accnt = eWallet.call.taikowallet.GetAddress();
 
@@ -64,15 +61,39 @@ public class iTaiko : MonoBehaviour
 
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
-            statusText.text = "TAIKO Connected Successfully!";
+            statusText.text = "Taiko Network Connected Successfully!";
             taikoSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim TAIKO Fauchet!";
-            eWallet.call.taikoFObj.SetActive(true);
-            eWallet.call.taikoFObj.transform.GetChild(0).GetComponent<TMP_Text>().text = accnt;
+            statusText.text = "Claim Taiko Fauchet!";
+
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "167009", new JsonRpcProvider("https://rpc.hekla.taiko.xyz"));
+            taiko0Gas = new SmartContract(rawTaikoFaucetManager.Address, rawTaikoFaucetManager.ABI, faucetwallet);
+            taikoFauchetCall(eWallet.call.account);
+        }
+    }
+
+    public async void taikoFauchetCall(string receiver)
+    {
+        string methodName = "taikoPay";
+
+        object[] arguments = new object[] {
+            receiver
+        };
+
+        try
+        {
+            var transactionHash = await taiko0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
+
+            statusText.text = "Taiko ETH distributed successfully.";
+
             lm.exeLoader.SetActive(false);
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            statusText.text = "Taiko ETH distribution failed.";
         }
     }
 
