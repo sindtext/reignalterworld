@@ -1,14 +1,16 @@
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
-using System.Collections.Generic;
+using System.Collections;
 using System.Numerics;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
+
 public class iSkale : MonoBehaviour
 {
     public static iSkale call;
@@ -20,6 +22,7 @@ public class iSkale : MonoBehaviour
     SmartContract RAWGld;
     SmartContract eRAWChanger;
     SmartContract sFuelFaucet;
+    SmartContract skaleGacha;
 
     JsonRpcProvider provider;
 
@@ -28,6 +31,8 @@ public class iSkale : MonoBehaviour
 
     public TextMeshProUGUI statusText;
     public TMP_Text sFuelDisplay;
+    int gachaValue;
+    public TMP_InputField gachaText;
 
     private void Awake()
     {
@@ -43,12 +48,21 @@ public class iSkale : MonoBehaviour
         provider = new JsonRpcProvider();
     }
 
-    public async void sContract()
+    public IEnumerator sContract()
     {
         RAWBrz = new SmartContract(RAWBrzManager.Address, RAWBrzManager.ABI, eWallet.call.wallet);
+        yield return new WaitWhile(() => RAWBrz == null);
         RAWSlv = new SmartContract(RAWSlvManager.Address, RAWSlvManager.ABI, eWallet.call.wallet);
+        yield return new WaitWhile(() => RAWSlv == null);
         RAWGld = new SmartContract(RAWGldManager.Address, RAWGldManager.ABI, eWallet.call.wallet);
+        yield return new WaitWhile(() => RAWGld == null);
         eRAWChanger = new SmartContract(eRAWChangerManager.Address, eRAWChangerManager.ABI, eWallet.call.wallet);
+        yield return new WaitWhile(() => eRAWChanger == null);
+        EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
+        yield return new WaitWhile(() => faucetwallet == null);
+        sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
+        yield return new WaitWhile(() => sFuelFaucet == null);
+
 
         eWallet.call.createBtn.SetActive(false);
         eWallet.call.connectBtn.SetActive(false);
@@ -77,10 +91,7 @@ public class iSkale : MonoBehaviour
 
     public async void sConnect()
     {
-        statusText.text = "Connecting to SKALE...";
-        EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
-        sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
-
+        statusText.text = "Connecting to SKALE Nebula Gaming Hub...";
         var currentGasBalance = await provider.GetBalance(eWallet.call.account);
         sFuelDisplay.text = ": " + currentGasBalance.ToString();
 
@@ -95,12 +106,15 @@ public class iSkale : MonoBehaviour
                 if (PlayerPrefs.HasKey("timeStamp")) DataServer.call.updateShortData("Account/RawBank", new string[2] { "Gold", "timeStamp" }, new object[2] { PlayerPrefs.GetFloat("tempExc"), PlayerPrefs.GetString("timeStamp") });
             }
 
-            statusText.text = "SKALE Connected Successfully!";
+            statusText.text = "SKALE Nebula Gaming Hub Connected Successfully!";
             DataServer.call.saveWallet(eWallet.call.account);
-            rcm.openExhange();
+            StartCoroutine(rcm.openExhange());
 
             eWallet.call.walletLoad.SetActive(false);
-            eWallet.call.tokenContainer.SetActive(true);
+            eWallet.call.tokenContainer.GetChild(0).gameObject.SetActive(true);
+            eWallet.call.tokenContainer.parent.GetChild(0).GetChild(0).GetChild(0).GetComponent<Image>().color = new Color(0, 0.625f, 0.625f, 0.625f);
+            eWallet.call.tokenContainer.parent.GetChild(0).GetChild(1).GetChild(0).GetComponent<Image>().color = new Color(0, 0, 0, 0.625f);
+            eWallet.call.tokenContainer.parent.GetChild(0).GetChild(2).GetChild(0).GetComponent<Image>().color = new Color(0, 0, 0, 0.625f);
         }
         else
         {
@@ -131,7 +145,7 @@ public class iSkale : MonoBehaviour
         }
     }
 
-    public async void currencySave(string crncy, BigInteger key, BigInteger lck, BigInteger amnt, string timeStamp)
+    public async void currencySave(string crncy, BigInteger key, BigInteger lck, BigInteger amnt, string timeStamp, string saveAmount)
     {
         string methodName = "Save";
 
@@ -145,9 +159,19 @@ public class iSkale : MonoBehaviour
         try
         {
             var transactionHash = await eRAWChanger.SendTransaction(methodName, gas: "100000", parameters: arguments);
-            DataServer.call.updateShortData("Account/RawChanger", new string[1] { "timeStamp" }, new object[1] { timeStamp });
-            statusText.text = "Saved successfully!";
-            rcm.openExhange();
+
+            string txStatus = await provider.GetTransactionStatus(transactionHash);
+            if(txStatus == "Success")
+            {
+                DataServer.call.updateShortData("Account/RawChanger", new string[1] { "timeStamp" }, new object[1] { timeStamp });
+                rcm.savingSuccess(saveAmount);
+                statusText.text = "Saved successfully!";
+            }
+            else
+            {
+                statusText.text = "Saved failed, Try Again!";
+                statusText.transform.parent.GetChild(2).gameObject.SetActive(true);
+            }
         }
         catch (System.Exception e)
         {
@@ -169,8 +193,17 @@ public class iSkale : MonoBehaviour
         try
         {
             var transactionHash = await eRAWChanger.SendTransaction(methodName, gas: "100000", parameters: arguments);
-            statusText.text = "Exchanged successfully.";
-            rcm.openExhange();
+            string txStatus = await provider.GetTransactionStatus(transactionHash);
+            if (txStatus == "Success")
+            {
+                statusText.text = "Exchanged successfully.";
+                StartCoroutine(rcm.openExhange());
+            }
+            else
+            {
+                statusText.text = "Exchanged failed, Try Again!";
+                statusText.transform.parent.GetChild(2).gameObject.SetActive(true);
+            }
         }
         catch (System.Exception e)
         {
@@ -251,9 +284,17 @@ public class iSkale : MonoBehaviour
         try
         {
             var status = await RAWBrz.Call<BigInteger>(methodName, arguments);
-            string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
-            rcm.brzAsset = int.Parse(stirngbalance);
-            rcm.brzDisplay.text = rcm.brzAsset.ToString();
+            if (status.ToString() == "0" || status.ToString().Length <= 18 || string.IsNullOrEmpty(status.ToString()))
+            {
+                rcm.brzAsset = 0;
+                rcm.brzDisplay.text = rcm.gldAsset.ToString();
+            }
+            else
+            {
+                string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
+                rcm.brzAsset = int.Parse(stirngbalance);
+                rcm.brzDisplay.text = rcm.brzAsset.ToString();
+            }
         }
         catch (System.Exception e)
         {
@@ -338,9 +379,17 @@ public class iSkale : MonoBehaviour
         try
         {
             var status = await RAWSlv.Call<BigInteger>(methodName, arguments);
-            string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
-            rcm.slvAsset = int.Parse(stirngbalance);
-            rcm.slvDisplay.text = rcm.slvAsset.ToString();
+            if (status.ToString() == "0" || status.ToString().Length <= 18 || string.IsNullOrEmpty(status.ToString()))
+            {
+                rcm.slvAsset = 0;
+                rcm.slvDisplay.text = rcm.gldAsset.ToString();
+            }
+            else
+            {
+                string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
+                rcm.slvAsset = int.Parse(stirngbalance);
+                rcm.slvDisplay.text = rcm.slvAsset.ToString();
+            }
         }
         catch (System.Exception e)
         {
@@ -425,9 +474,17 @@ public class iSkale : MonoBehaviour
         try
         {
             var status = await RAWGld.Call<BigInteger>(methodName, arguments);
-            string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
-            rcm.gldAsset = int.Parse(stirngbalance);
-            rcm.gldDisplay.text = rcm.gldAsset.ToString();
+            if (status.ToString() == "0" || status.ToString().Length <= 18 || string.IsNullOrEmpty(status.ToString()))
+            {
+                rcm.gldAsset = 0;
+                rcm.gldDisplay.text = rcm.gldAsset.ToString();
+            }
+            else
+            {
+                string stirngbalance = status.ToString().Substring(0, status.ToString().Length - 18);
+                rcm.gldAsset = int.Parse(stirngbalance);
+                rcm.gldDisplay.text = rcm.gldAsset.ToString();
+            }
         }
         catch (System.Exception e)
         {
@@ -508,5 +565,136 @@ public class iSkale : MonoBehaviour
         string signature = await eWallet.call.wallet.SignMessage(message);
 
         Debug.Log("Signature: " + signature);
+    }
+
+    public async void runGacha()
+    {
+        var currentGasBalance = await provider.GetBalance(eWallet.call.account);
+        Debug.Log(currentGasBalance.ToString());
+
+        skaleGacha = new SmartContract(SkaleGachaManager.Address, SkaleGachaManager.ABI, eWallet.call.wallet);
+
+        if (float.Parse(currentGasBalance.ToString()) > 0.000005f)
+        {
+            bool gachaReady = await exeCheckGacha();
+            if(gachaReady)
+            {
+                await exeGacha();
+                BigInteger tempValue = await exeLastGacha<BigInteger>();
+                gachaValue = (int)tempValue;
+                gachaText.text = gachaValue.ToString();
+            }
+            else
+            {
+                Debug.Log("GACHA HABIS");
+            }
+        }
+    }
+
+    public async Task<BigInteger> exeLastSign<BigInteger>()
+    {
+        string methodName = "lastSign";
+
+        object[] arguments = new object[] {
+
+        };
+
+        try
+        {
+            var status = await skaleGacha.Call<BigInteger>(methodName, arguments);
+            Debug.Log("Transaction Hash: " + status);
+            return status;
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            throw;
+        }
+    }
+
+    public async Task<bool> exeCheckGacha()
+    {
+        string methodName = "checkGacha";
+
+        object[] arguments = new object[] {
+
+        };
+
+        try
+        {
+            var status = await skaleGacha.Call<bool>(methodName, arguments);
+            Debug.Log("Transaction Hash: " + status);
+            return status;
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            throw;
+        }
+    }
+
+    public async Task<string> exeSignGacha()
+    {
+        string methodName = "signGacha";
+
+        object[] arguments = new object[] {
+
+        };
+
+        try
+        {
+            var transactionHash = await skaleGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            Debug.Log("Transaction Hash: " + transactionHash);
+            return transactionHash;
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            throw;
+        }
+    }
+
+    public async Task<string> exeGacha()
+    {
+        string methodName = "gacha";
+
+        object[] arguments = new object[] {
+
+        };
+
+        try
+        {
+            var transactionHash = await skaleGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            Debug.Log("Transaction Hash: " + transactionHash);
+            return transactionHash;
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            throw;
+        }
+    }
+
+    public async Task<BigInteger> exeLastGacha<BigInteger>()
+    {
+        string methodName = "lastGacha";
+
+        object[] arguments = new object[] {
+
+        };
+
+        try
+        {
+            var status = await skaleGacha.Call<BigInteger>(methodName, arguments);
+            Debug.Log("Transaction Hash: " + status);
+            return status;
+        }
+        catch (System.Exception e)
+        {
+            Debug.Log(e);
+            await exeSignGacha();
+            runGacha();
+            throw;
+        }
     }
 }
