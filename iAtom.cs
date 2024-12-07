@@ -48,8 +48,8 @@ public class iAtom : MonoBehaviour
 
     public void atomContract()
     {
-        Atom = new SmartContract(atomAddress, atomABI, eWallet.call.atomwallet, true);
-        atom0Gas = new SmartContract(atom0GasAddress, atom0GasABI, eWallet.call.atomwallet, true);
+        Atom = new SmartContract(atomAddress, atomABI, eWallet.call.atomwallet, "atom");
+        atom0Gas = new SmartContract(atom0GasAddress, atom0GasABI, eWallet.call.atomwallet, "atom");
         atomConnect();
     }
 

@@ -9,16 +9,13 @@ using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
+using System.Collections;
 
 public class iTaiko : MonoBehaviour
 {
     public static iTaiko call;
 
-    LobbyManager lm;
-
     SmartContract Taiko;
-    string taikoAddress;
-    string taikoABI;
     SmartContract taiko0Gas;
 
     JsonRpcProvider provider;
@@ -39,20 +36,26 @@ public class iTaiko : MonoBehaviour
 
     private void Start()
     {
-        lm = FindObjectOfType<LobbyManager>();
         provider = new JsonRpcProvider("https://rpc.hekla.taiko.xyz");
-        taikoContract();
+        //taikoContract();
     }
 
-    public void taikoContract()
+    public IEnumerator taikoContract()
     {
-        Taiko = new SmartContract(taikoAddress, taikoABI, eWallet.call.taikowallet, true);
+        if (taiko0Gas == null)
+        {
+            //Taiko = new SmartContract(emcAddress, emcABI, eWallet.call.emcwallet, "emc");
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "167009", provider);
+            yield return new WaitWhile(() => faucetwallet == null);
+            taiko0Gas = new SmartContract(rawTaikoFaucetManager.Address, rawTaikoFaucetManager.ABI, faucetwallet);
+            yield return new WaitWhile(() => taiko0Gas == null);
+        }
         taikoConnect();
     }
 
     public async void taikoConnect()
     {
-        statusText.text = "Connecting to Taiko Network...";
+        statusText.text += "\n Connecting to Taiko Network...";
 
         string accnt = eWallet.call.taikowallet.GetAddress();
 
@@ -61,16 +64,14 @@ public class iTaiko : MonoBehaviour
 
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
-            statusText.text = "Taiko Network Connected Successfully!";
+            statusText.text += "\n Taiko Network Connected Successfully!";
             taikoSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim Taiko Fauchet!";
+            statusText.text += "\n Claim Taiko Fauchet!";
 
-            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "167009", new JsonRpcProvider("https://rpc.hekla.taiko.xyz"));
-            taiko0Gas = new SmartContract(rawTaikoFaucetManager.Address, rawTaikoFaucetManager.ABI, faucetwallet);
-            taikoFauchetCall(eWallet.call.account);
+            taikoFauchetCall(accnt);
         }
     }
 
@@ -86,14 +87,13 @@ public class iTaiko : MonoBehaviour
         {
             var transactionHash = await taiko0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
 
-            statusText.text = "Taiko ETH distributed successfully.";
-
-            lm.exeLoader.SetActive(false);
+            statusText.text += "\n Taiko ETH distributed successfully.";
+            taikoConnect();
         }
         catch (System.Exception e)
         {
             Debug.Log(e);
-            statusText.text = "Taiko ETH distribution failed.";
+            statusText.text += "\n Taiko ETH distribution failed.";
         }
     }
 
@@ -103,8 +103,7 @@ public class iTaiko : MonoBehaviour
         // This will return a signature
         string signature = await eWallet.call.taikowallet.SignMessage(message);
 
-        statusText.text = "Signature: " + signature;
-        lm.exeLoader.SetActive(false);
+        statusText.text = "Taiko Signed : " + message;
     }
 
     public async Task<BigInteger> taikoAllowance<BigInteger>(string owner, string spender)

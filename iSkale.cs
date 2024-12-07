@@ -1,5 +1,6 @@
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
+using System;
 using System.Collections;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ public class iSkale : MonoBehaviour
     public TMP_Text sFuelDisplay;
     int gachaValue;
     public TMP_InputField gachaText;
+    public GameObject gachaResult;
+    public GameObject gachaBtn;
 
     private void Awake()
     {
@@ -50,19 +53,21 @@ public class iSkale : MonoBehaviour
 
     public IEnumerator sContract()
     {
-        RAWBrz = new SmartContract(RAWBrzManager.Address, RAWBrzManager.ABI, eWallet.call.wallet);
-        yield return new WaitWhile(() => RAWBrz == null);
-        RAWSlv = new SmartContract(RAWSlvManager.Address, RAWSlvManager.ABI, eWallet.call.wallet);
-        yield return new WaitWhile(() => RAWSlv == null);
-        RAWGld = new SmartContract(RAWGldManager.Address, RAWGldManager.ABI, eWallet.call.wallet);
-        yield return new WaitWhile(() => RAWGld == null);
-        eRAWChanger = new SmartContract(eRAWChangerManager.Address, eRAWChangerManager.ABI, eWallet.call.wallet);
-        yield return new WaitWhile(() => eRAWChanger == null);
-        EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
-        yield return new WaitWhile(() => faucetwallet == null);
-        sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
-        yield return new WaitWhile(() => sFuelFaucet == null);
-
+        if(RAWBrz == null)
+        {
+            RAWBrz = new SmartContract(RAWBrzManager.Address, RAWBrzManager.ABI, eWallet.call.wallet);
+            yield return new WaitWhile(() => RAWBrz == null);
+            RAWSlv = new SmartContract(RAWSlvManager.Address, RAWSlvManager.ABI, eWallet.call.wallet);
+            yield return new WaitWhile(() => RAWSlv == null);
+            RAWGld = new SmartContract(RAWGldManager.Address, RAWGldManager.ABI, eWallet.call.wallet);
+            yield return new WaitWhile(() => RAWGld == null);
+            eRAWChanger = new SmartContract(eRawChangerManager.Address, eRawChangerManager.ABI, eWallet.call.wallet);
+            yield return new WaitWhile(() => eRAWChanger == null);
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "37084624", new JsonRpcProvider("https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet"));
+            yield return new WaitWhile(() => faucetwallet == null);
+            sFuelFaucet = new SmartContract(sRAWFaucetManager.Address, sRAWFaucetManager.ABI, faucetwallet);
+            yield return new WaitWhile(() => sFuelFaucet == null);
+        }
 
         eWallet.call.createBtn.SetActive(false);
         eWallet.call.connectBtn.SetActive(false);
@@ -182,7 +187,7 @@ public class iSkale : MonoBehaviour
 
     public async void currencyExchange(string crna, string crnb, BigInteger amnt)
     {
-        string methodName = "exchange";
+        string methodName = "Exchange";
 
         object[] arguments = new object[] {
             crna,
@@ -214,7 +219,7 @@ public class iSkale : MonoBehaviour
 
     public async void crossExchange(string crncy, BigInteger amnt)
     {
-        string methodName = "crossChange";
+        string methodName = "CrossChange";
 
         object[] arguments = new object[] {
             crncy,
@@ -235,10 +240,10 @@ public class iSkale : MonoBehaviour
 
     public async Task<BigInteger> readRaws<BigInteger>()
     {
-        string methodName = "getRAWS";
+        string methodName = "GetRAWS";
 
         object[] arguments = new object[] {
-            
+            eWallet.call.account
         };
 
         try
@@ -255,7 +260,7 @@ public class iSkale : MonoBehaviour
 
     public async void useRaws(BigInteger amnt)
     {
-        string methodName = "useRAWS";
+        string methodName = "UseRAWS";
 
         object[] arguments = new object[] {
             amnt
@@ -567,12 +572,48 @@ public class iSkale : MonoBehaviour
         Debug.Log("Signature: " + signature);
     }
 
+    public void checkGacha()
+    {
+        StartCoroutine(checkingGacha());
+    }
+
+    IEnumerator checkingGacha()
+    {
+        yield return new WaitWhile(() => eWallet.call.wallet == null);
+        skaleGacha = new SmartContract(SkaleGachaManager.Address, SkaleGachaManager.ABI, eWallet.call.wallet, "https://testnet.skalenodes.com/v1/lanky-ill-funny-testnet");
+        checkedGacha();
+    }
+
+    public async void checkedGacha()
+    {
+        bool gachaReady = await exeCheckGacha();
+        int lastsign = 0;
+        BigInteger tempValue = await exeLastSign<BigInteger>();
+        lastsign = (int)tempValue;
+
+        if (!gachaReady && lastsign != 0)
+        {
+            gachaBtn.transform.parent.GetChild(1).gameObject.SetActive(false);
+            gachaBtn.SetActive(true);
+            gachaBtn.transform.GetChild(0).GetComponent<TMP_Text>().text = "Redeemed";
+            gachaBtn.GetComponent<Button>().interactable = false;
+            gachaText.text = "REDEEMED";
+            gachaResult.SetActive(false);
+        }
+        else
+        {
+            gachaBtn.transform.parent.GetChild(1).gameObject.SetActive(true);
+            gachaBtn.SetActive(false);
+            gachaText.text = "::::::::::::::::";
+            gachaResult.SetActive(false);
+        }
+    }
+
     public async void runGacha()
     {
+        lm.exeLoader.SetActive(true);
         var currentGasBalance = await provider.GetBalance(eWallet.call.account);
         Debug.Log(currentGasBalance.ToString());
-
-        skaleGacha = new SmartContract(SkaleGachaManager.Address, SkaleGachaManager.ABI, eWallet.call.wallet);
 
         if (float.Parse(currentGasBalance.ToString()) > 0.000005f)
         {
@@ -583,26 +624,96 @@ public class iSkale : MonoBehaviour
                 BigInteger tempValue = await exeLastGacha<BigInteger>();
                 gachaValue = (int)tempValue;
                 gachaText.text = gachaValue.ToString();
+                gachaResult.SetActive(false);
+                gachaBtn.SetActive(true);
+                gachaBtn.transform.GetChild(0).GetComponent<TMP_Text>().text = "Redeem Ticket";
+                gachaBtn.GetComponent<Button>().interactable = true;
+                lm.exeLoader.SetActive(false);
             }
             else
             {
-                Debug.Log("GACHA HABIS");
+                int lastsign = 0;
+                BigInteger tempValue = await exeLastSign<BigInteger>();
+                lastsign = (int)tempValue;
+
+                if (lastsign == 0)
+                {
+                    await exeSignGacha();
+                    runGacha();
+                }
+                else
+                {
+                    gachaBtn.transform.parent.GetChild(1).gameObject.SetActive(false);
+                    gachaBtn.SetActive(true);
+                    gachaBtn.transform.GetChild(0).GetComponent<TMP_Text>().text = "Redeemed";
+                    gachaBtn.GetComponent<Button>().interactable = false;
+                    gachaText.text = "REDEEMED";
+                    gachaResult.SetActive(false);
+                    lm.exeLoader.SetActive(false);
+                }
             }
         }
     }
 
+    public void redeemGacha()
+    {
+        gachaBtn.transform.parent.GetChild(1).gameObject.SetActive(false);
+        gachaBtn.transform.GetChild(0).GetComponent<TMP_Text>().text = "Redeemed";
+        gachaBtn.GetComponent<Button>().interactable = false;
+        lm.exeLoader.SetActive(true);
+
+        float pow = gachaValue >= 10000 ? 7 : gachaValue < 100 ? 3 : 5;
+        float luck = Mathf.Pow(10, gachaValue % pow);
+
+        gachaResult.transform.GetChild(0).GetComponent<TMP_Text>().text = luck.ToString("N");
+        gachaResult.transform.GetChild(1).gameObject.SetActive(pow == 7);
+        gachaResult.transform.GetChild(2).gameObject.SetActive(pow == 5);
+        gachaResult.transform.GetChild(3).gameObject.SetActive(pow == 3);
+
+        string currency = pow == 7 ? "rawbrz" : pow == 5 ? "rawslv" : "rawgld";
+        StartCoroutine(savingProcessor(luck.ToString(), currency));
+    }
+
+    IEnumerator savingProcessor(string saveAmnt, string crncy)
+    {
+        statusText.text = "Redeem On Process...";
+
+        int lck = 0;
+
+        yield return DataServer.call.eLockCall((result) => {
+            lck = result;
+
+            int _key = (123456 + lck) % 999999;
+            var stringpin = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - _key.ToString("X").Length) + _key.ToString("X");
+            BigInteger uintpin = BigInteger.Parse(stringpin, System.Globalization.NumberStyles.HexNumber);
+
+            int _lock = DateTime.Now.Hour % 6;
+            string timestamp = DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute.ToString();
+            var stringlock = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - _lock.ToString("X").Length) + _lock.ToString("X");
+            BigInteger uintlock = BigInteger.Parse(stringlock, System.Globalization.NumberStyles.HexNumber);
+
+            int _amnt = int.Parse(saveAmnt);
+            var stringamnt = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - _amnt.ToString("X").Length) + _amnt.ToString("X");
+            BigInteger uintamnt = BigInteger.Parse(stringamnt, System.Globalization.NumberStyles.HexNumber);
+
+            currencySave(crncy, uintpin, uintlock, uintamnt, timestamp, saveAmnt);
+            gachaText.text = "CHECK YOUR RAWBANK";
+            gachaResult.SetActive(true);
+        });
+    }
+
     public async Task<BigInteger> exeLastSign<BigInteger>()
     {
-        string methodName = "lastSign";
+        string methodName = "LastSign";
 
         object[] arguments = new object[] {
-
+            eWallet.call.account
         };
 
         try
         {
             var status = await skaleGacha.Call<BigInteger>(methodName, arguments);
-            Debug.Log("Transaction Hash: " + status);
+            Debug.Log("Result: " + status);
             return status;
         }
         catch (System.Exception e)
@@ -614,10 +725,10 @@ public class iSkale : MonoBehaviour
 
     public async Task<bool> exeCheckGacha()
     {
-        string methodName = "checkGacha";
+        string methodName = "CheckGacha";
 
         object[] arguments = new object[] {
-
+            eWallet.call.account
         };
 
         try
@@ -635,7 +746,7 @@ public class iSkale : MonoBehaviour
 
     public async Task<string> exeSignGacha()
     {
-        string methodName = "signGacha";
+        string methodName = "SignGacha";
 
         object[] arguments = new object[] {
 
@@ -656,7 +767,7 @@ public class iSkale : MonoBehaviour
 
     public async Task<string> exeGacha()
     {
-        string methodName = "gacha";
+        string methodName = "Gacha";
 
         object[] arguments = new object[] {
 
@@ -677,23 +788,21 @@ public class iSkale : MonoBehaviour
 
     public async Task<BigInteger> exeLastGacha<BigInteger>()
     {
-        string methodName = "lastGacha";
+        string methodName = "LastGacha";
 
         object[] arguments = new object[] {
-
+            eWallet.call.account
         };
 
         try
         {
             var status = await skaleGacha.Call<BigInteger>(methodName, arguments);
-            Debug.Log("Transaction Hash: " + status);
+            Debug.Log("Result: " + status);
             return status;
         }
         catch (System.Exception e)
         {
             Debug.Log(e);
-            await exeSignGacha();
-            runGacha();
             throw;
         }
     }

@@ -1,6 +1,6 @@
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
-using System.Collections.Generic;
+using System.Collections;
 using System.Numerics;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -44,17 +44,27 @@ public class u2u : MonoBehaviour
         provider = new JsonRpcProvider("https://rpc-nebulas-testnet.uniultra.xyz/");
     }
 
-    public void u2uContract()
+    public IEnumerator u2uContract()
     {
-        RAWS = new SmartContract(RAWSSupplyManager.Address, RAWSSupplyManager.ABI, eWallet.call.u2uwallet, true);
-        RAWBank = new SmartContract(RawBankManager.Address, RawBankManager.ABI, eWallet.call.u2uwallet, true);
-        RAWChanger = new SmartContract(RawChangerManager.Address, RawChangerManager.ABI, eWallet.call.u2uwallet, true);
+        if(RAWS == null)
+        {
+            RAWS = new SmartContract(RAWSSupplyManager.Address, RAWSSupplyManager.ABI, eWallet.call.u2uwallet, "https://rpc-nebulas-testnet.uniultra.xyz/");
+            yield return new WaitWhile(() => RAWS == null);
+            RAWBank = new SmartContract(RawBankManager.Address, RawBankManager.ABI, eWallet.call.u2uwallet, "https://rpc-nebulas-testnet.uniultra.xyz/");
+            yield return new WaitWhile(() => RAWBank == null);
+            RAWChanger = new SmartContract(RawChangerManager.Address, RawChangerManager.ABI, eWallet.call.u2uwallet, "https://rpc-nebulas-testnet.uniultra.xyz/");
+            yield return new WaitWhile(() => RAWChanger == null);
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "2484", provider);
+            yield return new WaitWhile(() => faucetwallet == null);
+            u2u0Gas = new SmartContract(rawU2UFaucetManager.Address, rawU2UFaucetManager.ABI, faucetwallet);
+            yield return new WaitWhile(() => u2u0Gas == null);
+        }
         u2uConnect();
     }
 
     public async void u2uConnect()
     {
-        statusText.text = "Connecting to U2U...";
+        statusText.text = "Connecting to U2U Network...";
 
         string accnt = eWallet.call.u2uwallet.GetAddress();
 
@@ -67,16 +77,13 @@ public class u2u : MonoBehaviour
             rawsDisplay.text = rawBalance.ToString();
             if (rawBalance > 0) rawsDisplay.text = rawsDisplay.text.Substring(0, rawsDisplay.text.Length - 18);
 
-            statusText.text = "U2U Connected Successfully!";
-            iSkale.call.sContract();
+            statusText.text = "U2U Network Connected Successfully!";
+            StartCoroutine(iSkale.call.sContract());
         }
         else
         {
             statusText.text = "Claim U2U Fauchet!";
-
-            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "2484", new JsonRpcProvider("https://rpc-nebulas-testnet.uniultra.xyz"));
-            u2u0Gas = new SmartContract(rawU2UFaucetManager.Address, rawU2UFaucetManager.ABI, faucetwallet);
-            u2uFauchetCall(eWallet.call.account);
+            u2uFauchetCall(accnt);
         }
     }
 
@@ -94,7 +101,7 @@ public class u2u : MonoBehaviour
 
             statusText.text = "U2U distributed successfully.";
 
-            lm.exeLoader.SetActive(false);
+            StartCoroutine(iSkale.call.sContract());
         }
         catch (System.Exception e)
         {
@@ -136,6 +143,7 @@ public class u2u : MonoBehaviour
         try
         {
             var status = await RAWBank.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            lm.stTutor.SetActive(true);
             return status;
         }
         catch (System.Exception e)
@@ -204,7 +212,8 @@ public class u2u : MonoBehaviour
         try
         {
             var status = await RAWChanger.SendTransaction(methodName, gas: "100000", parameters: arguments);
-            return status;
+            string txStatus = await provider.GetTransactionStatus(status);
+            return txStatus;
         }
         catch (System.Exception e)
         {

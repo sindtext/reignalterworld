@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Numerics;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 using TMPro;
 using Eidolon.Provider;
@@ -35,6 +36,11 @@ public class rawChangerManager : MonoBehaviour
     private UnityWebRequest webRequest;
     private bool isRequestInProgress = false;
 
+    public TMP_Text txtMain;
+    public TMP_Dropdown ddMain;
+    public TMP_Dropdown ddPair;
+    public Slider sdPair;
+    public TMP_InputField dpPair;
     public TextMeshProUGUI statusText;
 
     private void Awake()
@@ -54,35 +60,38 @@ public class rawChangerManager : MonoBehaviour
         iSkale.call.rcm = this;
     }
 
-    public void openExhange()
+    public IEnumerator openExhange()
     {
-        iSkale.call.brzBalance(eWallet.call.account);
-        iSkale.call.slvBalance(eWallet.call.account);
-        iSkale.call.gldBalance(eWallet.call.account);
+        brzDisplay.text = "-";
+        slvDisplay.text = "-";
+        gldDisplay.text = "-";
 
-        exchangeType("Bronze");
+        iSkale.call.brzBalance(eWallet.call.account);
+        yield return new WaitWhile(() => brzDisplay.text == "-");
+        iSkale.call.slvBalance(eWallet.call.account);
+        yield return new WaitWhile(() => slvDisplay.text == "-");
+        iSkale.call.gldBalance(eWallet.call.account);
+        yield return new WaitWhile(() => gldDisplay.text == "-");
+
+        exchangeType();
 
         StartCoroutine(DataServer.call.readDocummentData("Account/Progress"));
         lm.exeLoader.SetActive(false);
     }
 
-    public void savingType(string crncy)
+    public void savingType(string crncy = null)
     {
-        blncName = crncy;
-        blncDisplay.text = crncy == "Bronze" ? brzBlnc.ToString() : crncy == "Silver" ? slvBlnc.ToString() : gldBlnc.ToString();
-        maxBalance = crncy == "Bronze" ? brzBlnc : crncy == "Silver" ? slvBlnc : gldBlnc;
+        blncName = string.IsNullOrEmpty(blncName) ? "Bronze" : string.IsNullOrEmpty(crncy) ? blncName : crncy;
+        blncDisplay.text = blncName == "Bronze" ? brzBlnc.ToString() : blncName == "Silver" ? slvBlnc.ToString() : gldBlnc.ToString();
+        maxBalance = blncName == "Bronze" ? brzBlnc : blncName == "Silver" ? slvBlnc : gldBlnc;
     }
 
     public void saving(TMP_InputField saveAmnt)
     {
-        if (float.Parse(saveAmnt.text) > maxBalance || float.Parse(saveAmnt.text) < 100)
+        if (float.Parse(saveAmnt.text) > maxBalance)
             return;
 
         lm.exeLoader.SetActive(true);
-        float crntBlnc = blncName == "Bronze" ? brzAsset : blncName == "Silver" ? slvAsset : gldAsset;
-
-        DataServer.call.updateShortData("Account/Progress", new string[1] { blncName }, new object[1] { maxBalance - float.Parse(saveAmnt.text) });
-        DataServer.call.updateShortData("Account/RawBank", new string[1] { blncName }, new object[1] { crntBlnc + float.Parse(saveAmnt.text) });
 
         StartCoroutine(savingProcessor(saveAmnt));
     }
@@ -110,52 +119,91 @@ public class rawChangerManager : MonoBehaviour
             var stringamnt = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - _amnt.ToString("X").Length) + _amnt.ToString("X");
             BigInteger uintamnt = BigInteger.Parse(stringamnt, System.Globalization.NumberStyles.HexNumber);
 
-            iSkale.call.currencySave(crncy, uintpin, uintlock, uintamnt, timestamp);
+            iSkale.call.currencySave(crncy, uintpin, uintlock, uintamnt, timestamp, saveAmnt.text);
+            saveAmnt.text = "0";
         });
     }
 
-    public void exchangeType(string crncy)
+    public void savingSuccess(string saveAmnt)
     {
-        exchangeName = crncy;
-        maxExchange = crncy == "Bronze" ? brzAsset : crncy == "Silver" ? slvAsset : gldAsset;
+        float crntBlnc = blncName == "Bronze" ? brzAsset : blncName == "Silver" ? slvAsset : gldAsset;
+        DateTime utcDate = DateTime.UtcNow;
+        long stamp = (long)utcDate.Year * 12 * 30 * 24 * 60 * 60 + (long)utcDate.Month * 30 * 24 * 60 * 60 + (long)utcDate.Day * 24 * 60 * 60 + (long)utcDate.Hour * 60 * 60 + (long)utcDate.Minute * 60 + (long)utcDate.Second;
+
+        DataServer.call.updateLeaderboard("Currency/inGame", new string[2] { "score", "timestamp" }, new object[2] { brzAsset + slvAsset * 100 + gldAsset * 10000, stamp });
+        DataServer.call.updateShortData("Account/Progress", new string[1] { blncName }, new object[1] { maxBalance - float.Parse(saveAmnt) });
+        DataServer.call.updateShortData("Account/RawBank", new string[1] { blncName }, new object[1] { crntBlnc + float.Parse(saveAmnt) });
+
+        StartCoroutine(openExhange());
     }
 
-    public void exchange(TMP_InputField excAmnt)
+    public void exchangeType(TMP_Dropdown crncy = null)
     {
-        if (float.Parse(excAmnt.text) > maxExchange || float.Parse(excAmnt.text) < 100)
+        if(crncy == null)
+        {
+            exchangeName = "Bronze";
+            maxExchange = brzAsset;
+            ddMain.SetValueWithoutNotify(0);
+            ddPair.SetValueWithoutNotify(0);
+        }
+        else
+        {
+            exchangeName = crncy.options[crncy.value].text;
+            maxExchange = exchangeName == "Bronze" ? brzAsset : exchangeName == "Silver" ? slvAsset : gldAsset;
+            ddPair.SetValueWithoutNotify(crncy.value);
+        }
+
+        sdPair.maxValue = maxExchange;
+    }
+
+    public void valueUpdate(Slider excAmnt)
+    {
+        dpPair.text = (Mathf.Ceil(excAmnt.value / 100)).ToString();
+        sdPair.value = Mathf.Ceil(excAmnt.value / 100) * 100;
+        if(Mathf.Ceil(excAmnt.value / 100) > maxExchange / 100)
+        {
+            dpPair.text = (Mathf.Floor(excAmnt.value / 100)).ToString();
+            sdPair.value = Mathf.Floor(excAmnt.value / 100) * 100;
+        }
+        txtMain.text = sdPair.value.ToString();
+    }
+
+    public void exchange(Slider excAmnt)
+    {
+        if (excAmnt.value > maxExchange)
             return;
 
         string CurencyName = exchangeName == "Bronze" ? "Silver" : "Gold";
-        float exchangeAmount = float.Parse(excAmnt.text) / 100;
+        float exchangeAmount = excAmnt.value / 100;
         float crntBlnc = exchangeName == "Bronze" ? slvAsset : gldAsset;
 
         if (exchangeName == "Gold")
         {
-            gold = int.Parse(excAmnt.text);
+            gold = (int)excAmnt.value;
             raw = (int)exchangeAmount;
             pinChanger.SetActive(true);
         }
         else
         {
             lm.exeLoader.SetActive(true);
-            DataServer.call.updateShortData("Account/RawBank", new string[1] { exchangeName }, new object[1] { maxExchange - float.Parse(excAmnt.text) });
+            DataServer.call.updateShortData("Account/RawBank", new string[1] { exchangeName }, new object[1] { maxExchange - excAmnt.value });
             DataServer.call.updateShortData("Account/RawBank", new string[1] { CurencyName }, new object[1] { crntBlnc + exchangeAmount });
 
             exchangeProcessor(excAmnt);
         }
     }
-    async void exchangeProcessor(TMP_InputField excAmnt)
+    async void exchangeProcessor(Slider excAmnt)
     {
         statusText.text = "Exchange On Process...";
 
         string crna = exchangeName == "Bronze" ? "rawbrz" : exchangeName == "Silver" ? "rawslv" : "rawgld";
         string crnb = exchangeName == "Bronze" ? "rawslv" : "rawgld";
 
-        int _amnt = int.Parse(excAmnt.text);
+        int _amnt = (int)excAmnt.value;
         var stringamnt = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - _amnt.ToString("X").Length) + _amnt.ToString("X");
         BigInteger uintamnt = BigInteger.Parse(stringamnt, System.Globalization.NumberStyles.HexNumber);
 
-        BigInteger allowAmnt = crna == "rawbrz" ? await iSkale.call.brzAllowance<BigInteger>(eWallet.call.account, eRAWChangerManager.Address) : await iSkale.call.slvAllowance<BigInteger>(eWallet.call.account, eRAWChangerManager.Address);
+        BigInteger allowAmnt = crna == "rawbrz" ? await iSkale.call.brzAllowance<BigInteger>(eWallet.call.account, eRawChangerManager.Address) : await iSkale.call.slvAllowance<BigInteger>(eWallet.call.account, eRawChangerManager.Address);
 
         if (allowAmnt < uintamnt * 1000000000000000000)
         {
@@ -165,8 +213,8 @@ public class rawChangerManager : MonoBehaviour
             var stringvalue = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - (_value * _multi).ToString("X").Length) + (_value * _multi).ToString("X");
             BigInteger uintvalue = BigInteger.Parse(stringvalue, System.Globalization.NumberStyles.HexNumber);
 
-            if (crna == "rawbrz") await iSkale.call.brzApprove(eRAWChangerManager.Address, uintvalue);
-            if (crna == "rawslv") await iSkale.call.slvApprove(eRAWChangerManager.Address, uintvalue);
+            if (crna == "rawbrz") await iSkale.call.brzApprove(eRawChangerManager.Address, uintvalue);
+            if (crna == "rawslv") await iSkale.call.slvApprove(eRawChangerManager.Address, uintvalue);
         }
 
         statusText.text = "Exchange On Process...";
@@ -212,7 +260,7 @@ public class rawChangerManager : MonoBehaviour
     {
         var stringgold = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - gold.ToString("X").Length) + gold.ToString("X");
         BigInteger uintgold = BigInteger.Parse(stringgold, System.Globalization.NumberStyles.HexNumber);
-        BigInteger allowAmnt = await iSkale.call.gldAllowance<BigInteger>(eWallet.call.account, eRAWChangerManager.Address);
+        BigInteger allowAmnt = await iSkale.call.gldAllowance<BigInteger>(eWallet.call.account, eRawChangerManager.Address);
         if (allowAmnt < uintgold * 1000000000000000000)
         {
             statusText.text = "Approving Transaction...";
@@ -221,9 +269,10 @@ public class rawChangerManager : MonoBehaviour
             var stringvalue = "0000000000000000000000000000000000000000000000000000000000000000".Substring(0, 64 - (_value * _multi).ToString("X").Length) + (_value * _multi).ToString("X");
             BigInteger uintvalue = BigInteger.Parse(stringvalue, System.Globalization.NumberStyles.HexNumber);
 
-            await iSkale.call.gldApprove(eRAWChangerManager.Address, uintvalue);
+            await iSkale.call.gldApprove(eRawChangerManager.Address, uintvalue);
         }
 
+        pinChanger.SetActive(false);
         statusText.text = "Exchange On Process...";
         iSkale.call.crossExchange("rawgld", uintgold);
 
@@ -231,12 +280,20 @@ public class rawChangerManager : MonoBehaviour
         PlayerPrefs.SetFloat("tempExc", maxExchange - gold);
         PlayerPrefs.SetString("timeStamp", timestamp);
 
-        await u2u.call.rawChangerExchange(ticket, DataServer.call.refID, uintpin, uintlock, uintraw);
+        var txStatus = await u2u.call.rawChangerExchange(ticket, DataServer.call.refID, uintpin, uintlock, uintraw);
 
-        iSkale.call.useRaws(uintgold);
-        DataServer.call.updateShortData("Account/RawBank", new string[2] { exchangeName, "timeStamp" }, new object[2] { maxExchange - gold, timestamp });
-        DataServer.call.saveWallet("");
-        pinChanger.SetActive(false);
-        openExhange();
+        if (txStatus == "Success")
+        {
+            statusText.text = "Exchange successfully!";
+            iSkale.call.useRaws(uintgold);
+            DataServer.call.updateShortData("Account/RawBank", new string[2] { exchangeName, "timeStamp" }, new object[2] { maxExchange - gold, timestamp });
+            DataServer.call.saveWallet("");
+            StartCoroutine(openExhange());
+        }
+        else
+        {
+            statusText.text = "Exchange failed, Try Again!";
+            statusText.transform.parent.GetChild(2).gameObject.SetActive(true);
+        }
     }
 }

@@ -16,7 +16,7 @@ public class iMetis : MonoBehaviour
 
     LobbyManager lm;
 
-    SmartContract METIS;
+    SmartContract Metis;
     string metisAddress;
     string metisABI;
     SmartContract metis0Gas;
@@ -48,8 +48,8 @@ public class iMetis : MonoBehaviour
 
     public void metisContract()
     {
-        METIS = new SmartContract(metisAddress, metisABI, eWallet.call.metiswallet, true);
-        metis0Gas = new SmartContract(metis0GasAddress, metis0GasABI, eWallet.call.metiswallet, true);
+        Metis = new SmartContract(metisAddress, metisABI, eWallet.call.metiswallet, "metis");
+        metis0Gas = new SmartContract(metis0GasAddress, metis0GasABI, eWallet.call.metiswallet, "metis");
         metisConnect();
     }
 
@@ -97,7 +97,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var status = await METIS.Call<BigInteger>(methodName, arguments);
+            var status = await Metis.Call<BigInteger>(methodName, arguments);
             Debug.Log("Allowance Call Result: " + status);
             return status;
         }
@@ -119,7 +119,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Metis.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -141,7 +141,7 @@ public class iMetis : MonoBehaviour
 
         try
         {
-            var transactionHash = await METIS.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Metis.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
         }
         catch (System.Exception e)

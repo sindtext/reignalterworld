@@ -9,16 +9,13 @@ using Eidolon.Wallets;
 using Eidolon.Provider;
 using Eidolon.SmartContracts;
 using Eidolon.Util;
+using System.Collections;
 
 public class iEMC : MonoBehaviour
 {
     public static iEMC call;
 
-    LobbyManager lm;
-
     SmartContract EMC;
-    string emcAddress;
-    string emcABI;
     SmartContract emc0Gas;
 
     JsonRpcProvider provider;
@@ -39,20 +36,27 @@ public class iEMC : MonoBehaviour
 
     private void Start()
     {
-        lm = FindObjectOfType<LobbyManager>();
-        provider = new JsonRpcProvider("https://rpc1-testnet.emc.network");
-        emcContract();
+        provider = new JsonRpcProvider("https://rpc2-testnet.emc.network");
+        //emcContract();
     }
 
-    public void emcContract()
+    public IEnumerator emcContract()
     {
-        EMC = new SmartContract(emcAddress, emcABI, eWallet.call.emcwallet, true);
+        if(emc0Gas == null)
+        {
+            //EMC = new SmartContract(emcAddress, emcABI, eWallet.call.emcwallet, "emc");
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "99876", provider);
+            yield return new WaitWhile(() => faucetwallet == null);
+            emc0Gas = new SmartContract(rawEMCFauchetManager.Address, rawEMCFauchetManager.ABI, faucetwallet);
+            yield return new WaitWhile(() => emc0Gas == null);
+        }
+
         emcConnect();
     }
 
     public async void emcConnect()
     {
-        statusText.text = "Connecting to EMC...";
+        statusText.text += "\n Connecting to EMC Network...";
 
         string accnt = eWallet.call.emcwallet.GetAddress();
 
@@ -61,16 +65,14 @@ public class iEMC : MonoBehaviour
 
         if (float.Parse(gasBalance.ToString()) > 0.000005f)
         {
-            statusText.text = "EMC Connected Successfully!";
+            statusText.text += "\n EMC Network Connected Successfully!";
             emcSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim EMC Fauchet!";
+            statusText.text += "\n Claim EMC Fauchet!";
 
-            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "99876", new JsonRpcProvider("https://rpc1-testnet.emc.network"));
-            emc0Gas = new SmartContract(rawEMCFauchetManager.Address, rawEMCFauchetManager.ABI, faucetwallet);
-            emcFauchetCall(eWallet.call.account);
+            emcFauchetCall(accnt);
         }
     }
 
@@ -86,14 +88,13 @@ public class iEMC : MonoBehaviour
         {
             var transactionHash = await emc0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
 
-            statusText.text = "EMC distributed successfully.";
-
-            lm.exeLoader.SetActive(false);
+            statusText.text += "\n EMC distributed successfully.";
+            emcConnect();
         }
         catch (System.Exception e)
         {
             Debug.Log(e);
-            statusText.text = "EMC distribution failed.";
+            statusText.text += "\n EMC distribution failed.";
         }
     }
 
@@ -103,8 +104,18 @@ public class iEMC : MonoBehaviour
         // This will return a signature
         string signature = await eWallet.call.emcwallet.SignMessage(message);
 
-        statusText.text = "Signature: " + signature;
-        lm.exeLoader.SetActive(false);
+        statusText.text = "EMC Signed : " + message;
+    }
+
+    public void checkGacha()
+    {
+        StartCoroutine(checkingGacha());
+    }
+
+    IEnumerator checkingGacha()
+    {
+        yield return new WaitWhile(() => eWallet.call.emcwallet == null);
+
     }
 
     public async Task<BigInteger> emcAllowance<BigInteger>(string owner, string spender)
