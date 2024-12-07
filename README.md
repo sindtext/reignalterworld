@@ -10,6 +10,8 @@ COSMOS Interaction : [ATOM](https://github.com/sindtext/reignalterworld/blob/Con
 
 METIS Interaction : [METIS](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iMetis.cs)
 
+ZYTRON Interaction : [ZYTRON](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iZytron.cs)
+
 All Smart Contract Reader : [SKALE - U2U - EMC - TAIKO](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
 
 Please open Braches for the game Code
