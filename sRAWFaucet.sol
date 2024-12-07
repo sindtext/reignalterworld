@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: NONE
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.19; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -8,34 +8,34 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract rawU2UFaucet is AccessControl, ReentrancyGuard {
+contract sRAWFaucet is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address rawU2UFaucets;
+    address sRawFaucets;
     
     bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
-    iU2UFaucet iU2UFaucets;
+    sFUELFaucet sFuelFaucet;
 
     constructor() payable {
         _grantRole(MANAGER_ROLE, msg.sender);
-        rawU2UFaucets = address(this);
+        sRawFaucets = address(this);
     }
 
-    function U2UAdd(address faucet) external payable onlyRole(ADMIN_ROLE) {
-        iU2UFaucets = iU2UFaucet(faucet);
+    function sFUELAdd(address sfuelfaucet) external payable onlyRole(ADMIN_ROLE) {
+        sFuelFaucet = sFUELFaucet(sfuelfaucet);
     }
     
-    function U2UPay(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
-        iU2UFaucets.Pay(receiver);
+    function sRawFaucet(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
+        sFuelFaucet.pay(receiver);
     }
 
     function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
         _grantRole(ADMIN_ROLE, newadmin);
     }
 
-    function DeAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
-        _revokeRole(ADMIN_ROLE, newadmin);
+    function DeAdmin(address oldadmin) external payable onlyRole(MANAGER_ROLE) {
+        _revokeRole(ADMIN_ROLE, oldadmin);
     }
 
     function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
@@ -49,10 +49,10 @@ contract rawU2UFaucet is AccessControl, ReentrancyGuard {
             return;
         }
         IERC20 _stucktoken = IERC20(token);
-        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(rawU2UFaucets));
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(sRawFaucets));
     }
 }
 
-interface iU2UFaucet{
-  function Pay(address payable receiver) external;
+interface sFUELFaucet{
+  function pay(address payable receiver) external;
 }

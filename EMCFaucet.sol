@@ -10,64 +10,57 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract EMCFaucet is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address rawemc;
+    address EMCFaucets;
+    
+    bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
-    uint256 private amount = 0.0001 ether;
-
-    constructor() payable {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        rawemc = address(this);
-    }
+    uint256 private Amount = 0.0001 ether;
     
     event Payed(address indexed payee, uint256 indexed amount, uint256 indexed timestamp);
 
-    function _payer() internal view returns (address payable) {
-        return payable(msg.sender);
+    constructor() payable {
+        _grantRole(MANAGER_ROLE, msg.sender);
+        EMCFaucets = address(this);
     }
 
-    function _sender() internal view returns (address) {
-        return msg.sender;
-    }
-
-    function getBalance(address payable receiver) public view returns (uint) {
+    function GetBalance(address payable receiver) public view returns (uint256) {
         return receiver.balance;
     }
 
-    function pay(address payable receiver) external payable nonReentrant {
-        require(getBalance(_payer()) == 0, "EMCFaucet: Caller must have no EMC");
-        require(getBalance(payable(rawemc)) >= amount, "EMCFaucet: Contract Empty");
+    function Pay(address payable receiver) external payable nonReentrant {
+        require(GetBalance(payable(_msgSender())) == 0, "EMCFaucet: Caller must have no EMC");
+        require(GetBalance(payable(EMCFaucets)) >= Amount, "EMCFaucet: Contract Empty");
 
-        uint256 receiverBalance = receiver.balance;
-        if (receiverBalance < amount) {
-            uint256 payableAmount = amount - receiverBalance;
-            receiver.transfer(payableAmount);
-            emit Payed(receiver, payableAmount, block.timestamp);
+        uint256 _receiverBalance = receiver.balance;
+        if (_receiverBalance < Amount) {
+            uint256 _payableAmount = Amount - _receiverBalance;
+            receiver.transfer(_payableAmount);
+            emit Payed(receiver, _payableAmount, block.timestamp);
         }
     }
 
-    function depo() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_sender().balance > msg.value, "insuficient Balance");
+    function Depo() external payable onlyRole(MANAGER_ROLE) {
+        require(_msgSender().balance > msg.value, "insuficient Balance");
 
-        (bool sent, bytes memory data) = payable(rawemc).call{value: msg.value}("");
+        (bool sent, bytes memory data) = payable(EMCFaucets).call{value: msg.value}("");
     }
 
-    function updateAmount(uint256 _newAmount) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_newAmount > 0, "EMCFaucet: Invalid Amount");
-        amount = _newAmount;
+    function UpdateAmount(uint256 newamount) external payable onlyRole(MANAGER_ROLE) {
+        require(newamount > 0, "EMCFaucet: Invalid Amount");
+        Amount = newamount;
     }
 
-    function setOwner(address newOwner) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(DEFAULT_ADMIN_ROLE, newOwner);
-        revokeRole(DEFAULT_ADMIN_ROLE, _payer());
+    function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(MANAGER_ROLE, newmanager);
+        _revokeRole(MANAGER_ROLE, _msgSender());
     }
 
-    function stuckTokens(address token) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function StuckTokens(address token) external payable onlyRole(MANAGER_ROLE) {
         if (token == address(0x0)) {
             payable(_msgSender()).transfer(address(this).balance);
             return;
         }
-        IERC20 ERC20token = IERC20(token);
-        uint256 stuckBalance = ERC20token.balanceOf(rawemc);
-        ERC20token.safeTransfer(_payer(), stuckBalance);
+        IERC20 _stucktoken = IERC20(token);
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(EMCFaucets));
     }
 }

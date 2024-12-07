@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: NONE
 
-pragma solidity 0.8.20;
+pragma solidity 0.8.19; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -10,179 +10,171 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract eRawChanger is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address erawchanger;
+    address eRawChangers;
+    
+    bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     struct Token{
         string Symbol;
-        address tokenAddress;
-        uint Idx;
+        address TokenAddress;
+        uint256 Idx;
     }
 
-    struct Taxes {
+    struct Taxs {
         uint256 Tax;
         uint256 Balance;
     }
 
     struct Wallet {
-        uint Lock;
-        uint Keys;
+        uint256 Lock;
+        uint256 Keys;
         uint256 RAWS;
     }
 
-    uint currentTokenIdx;
-    uint[] internal chainList;
+    uint256 CurrentTokenIdx;
+    uint256[] internal ChainList;
 
-    mapping(string => Token) internal tokens;
-    mapping(string => Taxes) internal taxes;
-    mapping(address => Wallet) internal wallet;
+    mapping(string => Token) internal Tokens;
+    mapping(string => Taxs) internal Taxes;
+    mapping(address => Wallet) internal Wallets;
 
     constructor() payable {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        erawchanger = address(this);
-    }
-    
-    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
-    function _payer() internal view returns (address payable) {
-        return payable(msg.sender);
+        _grantRole(MANAGER_ROLE, msg.sender);
+        eRawChangers = address(this);
     }
 
-    function _sender() internal view returns (address) {
-        return msg.sender;
+    function GetTaxes(string calldata name) internal view returns(Taxs memory){
+        return Taxes[name];
     }
 
-    function getTaxes(string calldata name) internal view returns(Taxes memory){
-        return taxes[name];
+    function GetToken(string calldata name) internal view returns(Token memory){
+        return Tokens[name];
     }
 
-    function getToken(string calldata name) internal view returns(Token memory){
-        return tokens[name];
-    }
+    function Save(string calldata token, uint256 key, uint256 lock, uint256 amount) external nonReentrant {
+        Token memory _token = GetToken(token);
 
-    function Save(string calldata tkn, uint key, uint lock, uint256 amount) external nonReentrant {
-        Token memory _tkn = getToken(tkn);
+        require(_token.Idx != 0, "Wrong Token");
 
-        require(_tkn.Idx != 0, "Wrong Token");
+        Taxs memory _taxes = GetTaxes(token);
+        uint256 _tokendecimal = ERC20(_token.TokenAddress).decimals();
+        uint256 _tokenamount = amount - amount * _taxes.Tax;
 
-        Taxes memory _taxes = getTaxes(tkn);
-        uint256 tkndecimal = ERC20(_tkn.tokenAddress).decimals();
-        uint tknamnt = amount - amount * _taxes.Tax;
-
-        require(IERC20(_tkn.tokenAddress).balanceOf(erawchanger) >= tknamnt * 10 ** tkndecimal, "Temporary Close");
+        require(IERC20(_token.TokenAddress).balanceOf(eRawChangers) >= _tokenamount * 10 ** _tokendecimal, "Temporary Close");
         
-        if(wallet[_sender()].Keys == 0)
+        if(Wallets[_msgSender()].Keys == 0)
         {
-            wallet[_sender()] = Wallet (
+            Wallets[_msgSender()] = Wallet (
                 key,
                 key,
                 0
             );
         }
 
-        require(wallet[_sender()].Keys == key, "Not Authorized");
+        require(Wallets[_msgSender()].Keys == key, "Not Authorized");
 
-        IERC20(_tkn.tokenAddress).safeTransfer(_payer(), tknamnt * 10 ** tkndecimal);
+        IERC20(_token.TokenAddress).safeTransfer(_msgSender(), _tokenamount * 10 ** _tokendecimal);
         
-        uint _lock = (chainList[lock] + wallet[_sender()].Lock) % 999999;
-        wallet[_sender()].Keys = _lock;
+        uint256 _lock = (ChainList[lock] + Wallets[_msgSender()].Lock) % 999999;
+        Wallets[_msgSender()].Keys = _lock;
     }
 
-    function exchange(string calldata nama, string calldata namb, uint256 amount) external nonReentrant {
+    function Exchange(string calldata nama, string calldata namb, uint256 amount) external nonReentrant {
         require(amount % 100 == 0, "Rate Not Match");
 
-        Token memory _tkna = getToken(nama);
-        Token memory _tknb = getToken(namb);
+        Token memory _tokena = GetToken(nama);
+        Token memory _tokenb = GetToken(namb);
 
-        require(_tkna.Idx != 0, "Wrong Token");
-        require(_tknb.Idx != 0, "Wrong Token");
-        require(_tknb.Idx > _tkna.Idx, "Wrong Token");
+        require(_tokena.Idx != 0, "Wrong Token");
+        require(_tokenb.Idx != 0, "Wrong Token");
+        require(_tokenb.Idx > _tokena.Idx, "Wrong Token");
 
-        Taxes memory _taxes = getTaxes(nama);
-        uint256 decima = ERC20(_tkna.tokenAddress).decimals();
-        uint256 decimb = ERC20(_tknb.tokenAddress).decimals();
-        uint amnt = amount + amount * _taxes.Tax;
-        uint bmnt = amount / 100;
+        Taxs memory _taxes = GetTaxes(nama);
+        uint256 _decimala = ERC20(_tokena.TokenAddress).decimals();
+        uint256 _decimalb = ERC20(_tokenb.TokenAddress).decimals();
+        uint256 _amounta = amount + amount * _taxes.Tax;
+        uint256 _amountb = amount / 100;
 
-        require(IERC20(_tkna.tokenAddress).balanceOf(_payer()) >= amnt * 10 ** decima, "insuficient Balance");
-        require(IERC20(_tknb.tokenAddress).balanceOf(erawchanger) >= bmnt * 10 ** decimb, "Temporary Close");
+        require(IERC20(_tokena.TokenAddress).balanceOf(_msgSender()) >= _amounta * 10 ** _decimala, "insuficient Balance");
+        require(IERC20(_tokenb.TokenAddress).balanceOf(eRawChangers) >= _amountb * 10 ** _decimalb, "Temporary Close");
 
-        IERC20(_tkna.tokenAddress).safeTransferFrom(_payer(), erawchanger, amnt * 10 ** decima);
-        IERC20(_tknb.tokenAddress).safeTransfer(_payer(), bmnt * 10 ** decimb);
+        IERC20(_tokena.TokenAddress).safeTransferFrom(_msgSender(), eRawChangers, _amounta * 10 ** _decimala);
+        IERC20(_tokenb.TokenAddress).safeTransfer(_msgSender(), _amountb * 10 ** _decimalb);
     }
 
-    function crossChange(string calldata tkn, uint256 amount) external nonReentrant{
-        Token memory _tkn = getToken(tkn);
+    function CrossChange(string calldata tkn, uint256 amount) external nonReentrant{
+        Token memory _token = GetToken(tkn);
 
-        require(_tkn.Idx != 0, "Wrong Token");
-        require(_tkn.Idx == currentTokenIdx, "Wrong Token");
+        require(_token.Idx != 0, "Wrong Token");
+        require(_token.Idx == CurrentTokenIdx, "Wrong Token");
 
-        Taxes memory _taxes = getTaxes(tkn);
-        uint256 tkndecimal = ERC20(_tkn.tokenAddress).decimals();
-        uint tknamnt = amount + amount * _taxes.Tax;
+        Taxs memory _taxes = GetTaxes(tkn);
+        uint256 _tokendecimal = ERC20(_token.TokenAddress).decimals();
+        uint256 _tokenamnt = amount + amount * _taxes.Tax;
 
-        require(IERC20(_tkn.tokenAddress).balanceOf(_payer()) >= tknamnt * 10 ** tkndecimal, "insuficient Balance");
+        require(IERC20(_token.TokenAddress).balanceOf(_msgSender()) >= _tokenamnt * 10 ** _tokendecimal, "insuficient Balance");
 
-        IERC20(_tkn.tokenAddress).safeTransferFrom(_payer(), erawchanger, tknamnt * 10 ** tkndecimal);
-        wallet[_sender()].RAWS = amount / 100;
+        IERC20(_token.TokenAddress).safeTransferFrom(_msgSender(), eRawChangers, _tokenamnt * 10 ** _tokendecimal);
+        Wallets[_msgSender()].RAWS = amount / 100;
     }
 
-    function getRAWS() external view returns(uint256){
-        return wallet[_sender()].RAWS;
+    function GetRAWS(address user) external view returns(uint256){
+        return Wallets[user].RAWS;
     }
 
-    function useRAWS(uint256 amount) external nonReentrant{
-        uint256 raws = wallet[_sender()].RAWS;
+    function UseRAWS(uint256 amount) external nonReentrant{
+        uint256 _raws = Wallets[_msgSender()].RAWS;
 
-        require(raws >= amount, "insuficient Balance");
+        require(_raws >= amount, "insuficient Balance");
 
-        wallet[_sender()].RAWS = amount - raws;
+        Wallets[_msgSender()].RAWS = amount - _raws;
     }
 
-    function addToken(string calldata name, string calldata symbol, address tokenaddress, uint256 tax) external payable onlyRole(ADMIN_ROLE) {
-        currentTokenIdx++;
-        tokens[name] = Token(
+    function AddToken(string calldata name, string calldata symbol, address tokenaddress, uint256 tax) external payable onlyRole(ADMIN_ROLE) {
+        CurrentTokenIdx++;
+        Tokens[name] = Token(
             symbol,
             tokenaddress,
-            currentTokenIdx
+            CurrentTokenIdx
         );
 
-        taxes[name] = Taxes(
+        Taxes[name] = Taxs(
             tax,
             0
         );
     }
 
-    function CheckChainList(uint idx) external onlyRole(ADMIN_ROLE) view returns (uint) {
-        return chainList[idx];
+    function CheckChainList(uint256 idx) external onlyRole(ADMIN_ROLE) view returns (uint256) {
+        return ChainList[idx];
     }
 
-    function addLock() external payable onlyRole(ADMIN_ROLE) {
-        bytes32 lock = keccak256(abi.encodePacked(msg.sender, block.timestamp, block.prevrandao));
-        uint key = uint(lock) % 999999;
+    function AddLock() external payable onlyRole(ADMIN_ROLE) {
+        bytes32 _lock = keccak256(abi.encodePacked(msg.sender, block.timestamp, block.prevrandao));
+        uint256 _key = uint256(_lock) % 999999;
         
-        chainList.push(key);
+        ChainList.push(_key);
     }
 
-    function setAdmin(address newAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(ADMIN_ROLE, newAdmin);
+    function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(ADMIN_ROLE, newadmin);
     }
 
-    function deAdmin(address oldAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(ADMIN_ROLE, oldAdmin);
+    function DeAdmin(address oldadmin) external payable onlyRole(MANAGER_ROLE) {
+        _revokeRole(ADMIN_ROLE, oldadmin);
     }
 
-    function setOwner(address newOwner) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(DEFAULT_ADMIN_ROLE, newOwner);
-        revokeRole(DEFAULT_ADMIN_ROLE, _payer());
+    function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(MANAGER_ROLE, newmanager);
+        _revokeRole(MANAGER_ROLE, _msgSender());
     }
 
-    function stuckTokens(address token) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function StuckTokens(address token) external payable onlyRole(MANAGER_ROLE) {
         if (token == address(0x0)) {
             payable(_msgSender()).transfer(address(this).balance);
             return;
         }
-        IERC20 ERC20token = IERC20(token);
-        uint256 stuckBalance = ERC20token.balanceOf(erawchanger);
-        ERC20token.safeTransfer(_payer(), stuckBalance);
+        IERC20 _stucktoken = IERC20(token);
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(eRawChangers));
     }
 }

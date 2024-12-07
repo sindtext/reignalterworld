@@ -10,7 +10,10 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract RawChanger is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address rawchanger;
+    address RawChangers;
+    
+    bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     struct Ticket {
         string Code;
@@ -18,89 +21,79 @@ contract RawChanger is AccessControl, ReentrancyGuard {
         uint256 Balance;
     }
     
-    iRawBank irawbank;
+    iRawBank iRawBanks;
 
-    mapping(string => string) internal officer;
+    mapping(string => string) internal Officers;
 
-    mapping(string => Ticket) internal ticket;
+    mapping(string => Ticket) internal Tickets;
 
-    event ticketUpdate(Ticket result);
+    event TicketUpdate(Ticket result);
 
     constructor() payable {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        rawchanger = address(this);
-    }
-    
-    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
-    function _payer() internal view returns (address payable) {
-        return payable(msg.sender);
+        _grantRole(MANAGER_ROLE, msg.sender);
+        RawChangers = address(this);
     }
 
-    function _sender() internal view returns (address) {
-        return msg.sender;
-    }
-
-    function rawExchange(string calldata code, string calldata uid, uint key, uint lock, uint256 amount) external nonReentrant {
-        require(ticket[code].Balance == 1, "Expired");
+    function RawExchange(string calldata code, string calldata uid, uint256 key, uint256 lock, uint256 amount) external nonReentrant {
+        require(Tickets[code].Balance == 1, "Expired");
         
-        receiverAssistant(officer["exchanger"], ticket[code].Symbol, uid, key, lock, amount);
-        emit ticketUpdate(ticket[code]);
+        receiverAssistant(Officers["exchanger"], Tickets[code].Symbol, uid, key, lock, amount);
+        emit TicketUpdate(Tickets[code]);
     }
 
-    function redeemTicket(string calldata code, string calldata uid, uint key, uint lock) external nonReentrant {
-        require(ticket[code].Balance > 0, "Expired");
+    function RedeemTicket(string calldata code, string calldata uid, uint256 key, uint256 lock) external nonReentrant {
+        require(Tickets[code].Balance > 0, "Expired");
         
-        receiverAssistant(officer["airdroper"], ticket[code].Symbol, uid, key, lock, ticket[code].Balance);
-        emit ticketUpdate(ticket[code]);
+        receiverAssistant(Officers["airdroper"], Tickets[code].Symbol, uid, key, lock, Tickets[code].Balance);
+        emit TicketUpdate(Tickets[code]);
     }
 
-    function addRawBank(address rawbankaddress) external payable onlyRole(ADMIN_ROLE) {
-        irawbank = iRawBank(rawbankaddress);
+    function AddRawBank(address rawbankaddress) external payable onlyRole(ADMIN_ROLE) {
+        iRawBanks = iRawBank(rawbankaddress);
     }
 
-    function setOfficer(string calldata ofc, string calldata uid) external payable onlyRole(ADMIN_ROLE) {
-        officer[ofc] = uid;
+    function SetOfficer(string calldata exchanger, string calldata airdroper) external payable onlyRole(ADMIN_ROLE) {
+        Officers["exchanger"] = exchanger;
+        Officers["airdroper"] = airdroper;
     }
 
-    function addTicket(string calldata code, string calldata symbol, uint256 amount) external payable onlyRole(ADMIN_ROLE) {
-        ticket[code] = Ticket(
+    function AddTicket(string calldata code, string calldata symbol, uint256 amount) external payable onlyRole(ADMIN_ROLE) {
+        Tickets[code] = Ticket(
             code,
             symbol,
             amount
         );
 
-        emit ticketUpdate(ticket[code]);
+        emit TicketUpdate(Tickets[code]);
     }
 
-    function setOwner(address newOwner) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(DEFAULT_ADMIN_ROLE, newOwner);
-        revokeRole(DEFAULT_ADMIN_ROLE, _payer());
+    function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(ADMIN_ROLE, newadmin);
     }
 
-    function setAdmin(address newAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(ADMIN_ROLE, newAdmin);
+    function DeAdmin(address oldadmin) external payable onlyRole(MANAGER_ROLE) {
+        _revokeRole(ADMIN_ROLE, oldadmin);
     }
 
-    function deAdmin(address oldAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(ADMIN_ROLE, oldAdmin);
+    function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(MANAGER_ROLE, newmanager);
+        _revokeRole(MANAGER_ROLE, _msgSender());
     }
 
-    function stuckTokens(address token) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function StuckTokens(address token) external payable onlyRole(MANAGER_ROLE) {
         if (token == address(0x0)) {
             payable(_msgSender()).transfer(address(this).balance);
             return;
         }
-        IERC20 ERC20token = IERC20(token);
-        uint256 stuckBalance = ERC20token.balanceOf(rawchanger);
-        ERC20token.safeTransfer(_payer(), stuckBalance);
+        IERC20 _stucktoken = IERC20(token);
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(RawChangers));
     }
     
-    function receiverAssistant(string storage ofc, string storage symbol, string calldata uid, uint key, uint lock, uint256 amount) internal {
-        irawbank.ReceiverAssistant(symbol, ofc, uid, _sender(), key, lock, amount);
+    function receiverAssistant(string storage ofc, string storage symbol, string calldata uid, uint256 key, uint256 lock, uint256 amount) internal {
+        iRawBanks.ReceiverAssistant(symbol, ofc, uid, _msgSender(), key, lock, amount);
     }
 }
 
 interface iRawBank{
-  function ReceiverAssistant(string calldata symbol, string calldata uid, string calldata recipient, address add, uint key, uint lock, uint256 amount) external payable;
+  function ReceiverAssistant(string calldata symbol, string calldata uid, string calldata recipient, address add, uint256 key, uint256 lock, uint256 amount) external payable;
 }

@@ -10,57 +10,49 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract rawTaikoFaucet is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address rawtaiko;
+    address rawTaikoFaucets;
     
-    TaikoFaucet taikoFaucet;
+    bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
+    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    
+    iTaikoFaucet iTaikoFaucets;
 
     constructor() payable {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        rawtaiko = address(this);
+        _grantRole(MANAGER_ROLE, msg.sender);
+        rawTaikoFaucets = address(this);
+    }
+
+    function TaikoAdd(address faucet) external payable onlyRole(ADMIN_ROLE) {
+        iTaikoFaucets = iTaikoFaucet(faucet);
     }
     
-    bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-
-    function _payer() internal view returns (address payable) {
-        return payable(msg.sender);
+    function TaikoPay(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
+        iTaikoFaucets.Pay(receiver);
     }
 
-    function _sender() internal view returns (address) {
-        return msg.sender;
+    function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(ADMIN_ROLE, newadmin);
     }
 
-    function taikoAdd(address faucet) external payable onlyRole(ADMIN_ROLE) {
-        taikoFaucet = TaikoFaucet(faucet);
-    }
-    
-    function taikoPay(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
-        taikoFaucet.pay(receiver);
+    function DeAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
+        _revokeRole(ADMIN_ROLE, newadmin);
     }
 
-    function setAdmin(address newAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(ADMIN_ROLE, newAdmin);
+    function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(MANAGER_ROLE, newmanager);
+        _revokeRole(MANAGER_ROLE, _msgSender());
     }
 
-    function deAdmin(address oldAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(ADMIN_ROLE, oldAdmin);
-    }
-
-    function setOwner(address newOwner) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(DEFAULT_ADMIN_ROLE, newOwner);
-        revokeRole(DEFAULT_ADMIN_ROLE, _payer());
-    }
-
-    function stuckTokens(address token) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function StuckTokens(address token) external payable onlyRole(MANAGER_ROLE) {
         if (token == address(0x0)) {
             payable(_msgSender()).transfer(address(this).balance);
             return;
         }
-        IERC20 ERC20token = IERC20(token);
-        uint256 stuckBalance = ERC20token.balanceOf(rawtaiko);
-        ERC20token.safeTransfer(_payer(), stuckBalance);
+        IERC20 _stucktoken = IERC20(token);
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(rawTaikoFaucets));
     }
 }
 
-interface TaikoFaucet{
-  function pay(address payable receiver) external;
+interface iTaikoFaucet{
+  function Pay(address payable receiver) external;
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: NONE
 
-pragma solidity 0.8.19;
+pragma solidity 0.8.19; 
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -10,94 +10,87 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract ZytronGacha is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address gachaZytron;
-
-    uint timeLimit;
-
-    struct Presence {
-        address userID;
-        uint timeSign;
-        uint outCome;
-    }
-
-    mapping(address => Presence) internal presence;
-
-    constructor() payable {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        gachaZytron = address(this);
-    }
+    address ZytronGachas;
     
+    bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    event gachaOutcome(uint result, uint times);
+    uint TimeLimit;
 
-    function _payer() internal view returns (address payable) {
-        return payable(msg.sender);
+    struct Presence {
+        address UserID;
+        uint TimeSign;
+        uint OutCome;
     }
 
-    function _sender() internal view returns (address) {
-        return msg.sender;
+    mapping(address => Presence) internal Presences;
+
+    event GachaOutCome(uint result, uint times);
+
+    constructor() payable {
+        _grantRole(MANAGER_ROLE, msg.sender);
+        ZytronGachas = address(this);
     }
 
-    function signGacha() external nonReentrant {
-        require(presence[_sender()].userID == address(0x0), "Gacha Signed");
+    function SignGacha() external nonReentrant {
+        require(Presences[_msgSender()].UserID == address(0x0), "Gacha Signed");
 
-        presence[_sender()] = Presence (
-            _sender(),
-            block.timestamp - timeLimit,
-            999999
+        Presences[_msgSender()] = Presence (
+            _msgSender(),
+            block.timestamp - TimeLimit,
+            1000000
         );
     }
 
-    function gacha() external nonReentrant{
-        require(presence[_sender()].userID != address(0x0), "Gacha Signed Yet");
-        require(block.timestamp - presence[_sender()].timeSign > timeLimit, "Gacha Taked");
+    function Gacha() external nonReentrant{
+        require(Presences[_msgSender()].UserID != address(0x0), "Gacha Signed Yet");
+        require(block.timestamp - Presences[_msgSender()].TimeSign > TimeLimit, "Gacha Taked");
 
         bytes32 scrambler = keccak256(abi.encodePacked(msg.sender, block.timestamp, block.prevrandao));
-        uint outcome = uint(scrambler) % 999999;
         
-        presence[_sender()].timeSign = block.timestamp;
-        presence[_sender()].outCome = outcome;
+        uint256 _outcome = uint256(scrambler) % 1000000;
+        
+        Presences[_msgSender()].TimeSign = block.timestamp;
+        Presences[_msgSender()].OutCome = _outcome;
 
-        emit gachaOutcome(presence[_sender()].outCome, presence[_sender()].timeSign);
+        emit GachaOutCome(Presences[_msgSender()].OutCome, Presences[_msgSender()].TimeSign);
     }
 
-    function lastGacha() external view returns (uint) {
-        return presence[_sender()].outCome;
+    function LastGacha(address player) external view returns (uint) {
+        return Presences[player].OutCome;
     }
 
-    function checkGacha() external view returns (bool) {
-        return block.timestamp - presence[_sender()].timeSign > timeLimit;
+    function CheckGacha(address player) external view returns (bool) {
+        return Presences[player].UserID != address(0x0) && block.timestamp - Presences[player].TimeSign > TimeLimit;
     }
 
-    function lastSign() external view returns (uint) {
-        return presence[_sender()].timeSign;
+    function LastSign(address player) external view returns (uint) {
+        return Presences[player].TimeSign;
     }
 
-    function setTimeLimit(uint hourLimit) external payable onlyRole(ADMIN_ROLE) {
-        timeLimit = hourLimit * 60 * 60;
+    function SetTimeLimit(uint hourlimit) external payable onlyRole(ADMIN_ROLE) {
+        TimeLimit = hourlimit * 60 * 60;
     }
 
-    function setAdmin(address newAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(ADMIN_ROLE, newAdmin);
+    function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(ADMIN_ROLE, newadmin);
     }
 
-    function deAdmin(address oldAdmin) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(ADMIN_ROLE, oldAdmin);
+    function DeAdmin(address oldadmin) external payable onlyRole(MANAGER_ROLE) {
+        _revokeRole(ADMIN_ROLE, oldadmin);
     }
 
-    function setOwner(address newOwner) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(DEFAULT_ADMIN_ROLE, newOwner);
-        revokeRole(DEFAULT_ADMIN_ROLE, _payer());
+    function SetManager(address newmanager) external payable onlyRole(MANAGER_ROLE) {
+        _grantRole(MANAGER_ROLE, newmanager);
+        _revokeRole(MANAGER_ROLE, _msgSender());
     }
 
-    function stuckTokens(address token) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function StuckTokens(address token) external payable onlyRole(MANAGER_ROLE) {
         if (token == address(0x0)) {
             payable(_msgSender()).transfer(address(this).balance);
             return;
         }
-        IERC20 ERC20token = IERC20(token);
-        uint256 stuckBalance = ERC20token.balanceOf(gachaZytron);
-        ERC20token.safeTransfer(_payer(), stuckBalance);
+        IERC20 _stucktoken = IERC20(token);
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(ZytronGachas));
     }
 }
