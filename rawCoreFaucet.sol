@@ -8,26 +8,26 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract rawKaiaFaucet is AccessControl, ReentrancyGuard {
+contract rawCoreFaucet is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address rawKaiaFaucets;
+    address rawCoreFaucets;
     
     bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     
-    iKAIAFaucet iKaiaFaucet;
+    iKAIAFaucet iCoreFaucet;
 
     constructor() payable {
         _grantRole(MANAGER_ROLE, msg.sender);
-        rawKaiaFaucets = address(this);
+        rawCoreFaucets = address(this);
     }
 
-    function KaiaAdd(address faucet) external payable onlyRole(ADMIN_ROLE) {
-        iKaiaFaucet = iKAIAFaucet(faucet);
+    function CoreAdd(address faucet) external payable onlyRole(ADMIN_ROLE) {
+        iCoreFaucet = iKAIAFaucet(faucet);
     }
     
-    function KaiaPay(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
-        iKaiaFaucet.Pay(receiver);
+    function CorePay(address payable receiver) external payable onlyRole(ADMIN_ROLE) {
+        iCoreFaucet.Pay(receiver);
     }
 
     function SetAdmin(address newadmin) external payable onlyRole(MANAGER_ROLE) {
@@ -49,7 +49,7 @@ contract rawKaiaFaucet is AccessControl, ReentrancyGuard {
             return;
         }
         IERC20 _stucktoken = IERC20(token);
-        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(rawKaiaFaucets));
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(rawCoreFaucets));
     }
 }
 
