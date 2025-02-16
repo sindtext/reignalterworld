@@ -13,21 +13,21 @@ using Eidolon.Util;
 using System.Collections;
 using Org.BouncyCastle.Asn1.Cmp;
 
-public class iKaia : MonoBehaviour
+public class iCore : MonoBehaviour
 {
-    public static iKaia call;
+    public static iCore call;
 
     LobbyManager lm;
 
-    public EmbeddedWallet kaiaWallet;
-    SmartContract Kaia;
-    SmartContract kaia0Gas;
-    SmartContract kaiaGacha;
+    public EmbeddedWallet coreWallet;
+    SmartContract Core;
+    SmartContract core0Gas;
+    SmartContract coreGacha;
 
     JsonRpcProvider provider;
 
     public TextMeshProUGUI statusText;
-    public TMP_Text kaiaDisplay;
+    public TMP_Text coreDisplay;
     int gachaValue;
     public TMP_InputField gachaText;
     public GameObject gachaResult;
@@ -47,52 +47,52 @@ public class iKaia : MonoBehaviour
         provider = new JsonRpcProvider("https://rpc.ankr.com/klaytn_testnet");
     }
 
-    public IEnumerator kaiaContract()
+    public IEnumerator coreContract()
     {
         string signer = "XxX";
         signer = Signer.Load(eWallet.call.ID, eWallet.call.Key);
         yield return new WaitWhile(() => signer == "XxX");
 
-        kaiaWallet = new EmbeddedWallet(signer, "1001", provider);
-        yield return new WaitWhile(() => kaiaWallet == null);
+        coreWallet = new EmbeddedWallet(signer, "1001", provider);
+        yield return new WaitWhile(() => coreWallet == null);
 
-        if (kaia0Gas == null)
+        if (core0Gas == null)
         {
             EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "1001", provider);
             yield return new WaitWhile(() => faucetwallet == null);
-            kaia0Gas = new SmartContract(rawKaiaFaucetManager.Address, rawKaiaFaucetManager.ABI, faucetwallet);
-            yield return new WaitWhile(() => kaia0Gas == null);
+            core0Gas = new SmartContract(rawCoreFaucetManager.Address, rawCoreFaucetManager.ABI, faucetwallet);
+            yield return new WaitWhile(() => core0Gas == null);
         }
 
-        kaiaConnect();
+        coreConnect();
     }
 
-    public async void kaiaConnect()
+    public async void coreConnect()
     {
         statusText.text = "Connecting to KAIA Network...";
 
-        string accnt = kaiaWallet.GetAddress();
+        string accnt = coreWallet.GetAddress();
 
         var gasBalance = await provider.GetBalance(accnt);
-        kaiaDisplay.transform.parent.gameObject.SetActive(true);
-        kaiaDisplay.text = ((Mathf.Floor((float)gasBalance * 1000000000)) / 1000000000).ToString("F9") + " KAIA";
+        coreDisplay.transform.parent.gameObject.SetActive(true);
+        coreDisplay.text = ((Mathf.Floor((float)gasBalance * 1000000000)) / 1000000000).ToString("F9") + " KAIA";
 
         if (float.Parse(gasBalance.ToString()) > 0.56f)
         {
             statusText.text = "KAIA Network Connected Successfully!";
-            kaiaSign("Connect to Reign Alter World Store");
+            coreSign("Connect to Reign Alter World Store");
         }
         else
         {
             statusText.text = "Claim KAIA Fauchet!";
 
-            kaiaFauchetCall(accnt);
+            coreFauchetCall(accnt);
         }
     }
 
-    public async void kaiaFauchetCall(string receiver)
+    public async void coreFauchetCall(string receiver)
     {
-        string methodName = "KaiaPay";
+        string methodName = "CorePay";
 
         object[] arguments = new object[] {
             receiver
@@ -100,10 +100,10 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var transactionHash = await kaia0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await core0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
 
             statusText.text = "KAIA distributed successfully.";
-            kaiaConnect();
+            coreConnect();
         }
         catch (System.Exception e)
         {
@@ -113,15 +113,15 @@ public class iKaia : MonoBehaviour
     }
 
     // You can also have users sign messages using Embedded wallets:
-    public async void kaiaSign(string message)
+    public async void coreSign(string message)
     {
         // This will return a signature
-        string signature = await kaiaWallet.SignMessage(message);
+        string signature = await coreWallet.SignMessage(message);
 
         statusText.text = "KAIA Signed : " + message;
     }
 
-    public async Task<BigInteger> kaiaAllowance<BigInteger>(string owner, string spender)
+    public async Task<BigInteger> coreAllowance<BigInteger>(string owner, string spender)
     {
         string methodName = "allowance";
 
@@ -132,7 +132,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var status = await Kaia.Call<BigInteger>(methodName, arguments);
+            var status = await Core.Call<BigInteger>(methodName, arguments);
             Debug.Log("Allowance Call Result: " + status);
             return status;
         }
@@ -143,7 +143,7 @@ public class iKaia : MonoBehaviour
         }
     }
 
-    public async Task<string> kaiaApprove(string spender, BigInteger value)
+    public async Task<string> coreApprove(string spender, BigInteger value)
     {
         string methodName = "approve";
 
@@ -154,7 +154,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var transactionHash = await Kaia.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Core.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -165,7 +165,7 @@ public class iKaia : MonoBehaviour
         }
     }
 
-    public async void kaiaTransfer(string spender, BigInteger value)
+    public async void coreTransfer(string spender, BigInteger value)
     {
         string methodName = "transfer";
 
@@ -176,7 +176,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var transactionHash = await Kaia.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Core.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
         }
         catch (System.Exception e)
@@ -193,8 +193,8 @@ public class iKaia : MonoBehaviour
 
     IEnumerator checkingGacha()
     {
-        yield return new WaitWhile(() => kaiaWallet == null);
-        kaiaGacha = new SmartContract(KaiaGachaManager.Address, KaiaGachaManager.ABI, kaiaWallet);
+        yield return new WaitWhile(() => coreWallet == null);
+        coreGacha = new SmartContract(CoreGachaManager.Address, CoreGachaManager.ABI, coreWallet);
         checkedGacha();
     }
 
@@ -303,7 +303,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var status = await kaiaGacha.Call<BigInteger>(methodName, arguments);
+            var status = await coreGacha.Call<BigInteger>(methodName, arguments);
             Debug.Log("Result: " + status);
             return status;
         }
@@ -324,7 +324,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var status = await kaiaGacha.Call<bool>(methodName, arguments);
+            var status = await coreGacha.Call<bool>(methodName, arguments);
             Debug.Log("Transaction Hash: " + status);
             return status;
         }
@@ -345,7 +345,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var transactionHash = await kaiaGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await coreGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -366,7 +366,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var transactionHash = await kaiaGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await coreGacha.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -387,7 +387,7 @@ public class iKaia : MonoBehaviour
 
         try
         {
-            var status = await kaiaGacha.Call<BigInteger>(methodName, arguments);
+            var status = await coreGacha.Call<BigInteger>(methodName, arguments);
             Debug.Log("Result: " + status);
             return status;
         }
