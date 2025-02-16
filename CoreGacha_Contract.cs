@@ -2,11 +2,11 @@ using UnityEngine;
 using System.Collections;
 using Eidolon.SmartContracts;
 
-public static class KaiaGachaManager
+public static class CoreGachaManager
 {
     // This is your contract object, You can instantiate this in any other script if required.
-    // You can access this contract with KaiaGachaManager.KaiaGachaContract = new SmartContract(KaiaGachaManager.Address, KaiaGachaManager.ABI)
-    public static SmartContract KaiaGachaContract;
+    // You can access this contract with CoreGachaManager.CoreGachaContract = new SmartContract(CoreGachaManager.Address, CoreGachaManager.ABI)
+    public static SmartContract CoreGachaContract;
 
     // This is your contract address and be accessed with ContractManager.contractAddress
     public static string Address = "0xb13b9cb88fbd6d02202330667dac3af605eeedf3";
