@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract KaiaFaucet is AccessControl, ReentrancyGuard {
+contract CoreFaucet is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address KaiaFaucets;
+    address CoreFaucets;
     
     bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
@@ -20,7 +20,7 @@ contract KaiaFaucet is AccessControl, ReentrancyGuard {
 
     constructor() payable {
         _grantRole(MANAGER_ROLE, msg.sender);
-        KaiaFaucets = address(this);
+        CoreFaucets = address(this);
     }
 
     function GetBalance(address payable receiver) public view returns (uint256) {
@@ -28,8 +28,8 @@ contract KaiaFaucet is AccessControl, ReentrancyGuard {
     }
 
     function Pay(address payable receiver) external payable nonReentrant {
-        require(GetBalance(payable(_msgSender())) == 0, "KaiaFaucet: Caller must have no KAIA");
-        require(GetBalance(payable(KaiaFaucets)) >= Amount, "KaiaFaucet: Contract Empty");
+        require(GetBalance(payable(_msgSender())) == 0, "CoreFaucet: Caller must have no KAIA");
+        require(GetBalance(payable(CoreFaucets)) >= Amount, "CoreFaucet: Contract Empty");
 
         uint256 _receiverBalance = receiver.balance;
         if (_receiverBalance < Amount) {
@@ -42,11 +42,11 @@ contract KaiaFaucet is AccessControl, ReentrancyGuard {
     function Depo() external payable onlyRole(MANAGER_ROLE) {
         require(_msgSender().balance > msg.value, "insuficient Balance");
 
-        (bool sent, bytes memory data) = payable(KaiaFaucets).call{value: msg.value}("");
+        (bool sent, bytes memory data) = payable(CoreFaucets).call{value: msg.value}("");
     }
 
     function UpdateAmount(uint256 newamount) external payable onlyRole(MANAGER_ROLE) {
-        require(newamount > 0, "KaiaFaucet: Invalid Amount");
+        require(newamount > 0, "CoreFaucet: Invalid Amount");
         Amount = newamount;
     }
 
@@ -61,6 +61,6 @@ contract KaiaFaucet is AccessControl, ReentrancyGuard {
             return;
         }
         IERC20 _stucktoken = IERC20(token);
-        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(KaiaFaucets));
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(CoreFaucets));
     }
 }
