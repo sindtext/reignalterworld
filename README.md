@@ -1,12 +1,6 @@
-KAIA Project : [KAIA](https://github.com/sindtext/reignalterworld/tree/KAIA)
+RAWxKAIA Project : [KAIA](https://github.com/sindtext/reignalterworld/tree/KAIA)
 
-SKALE Interaction : [SKALE](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iSkale.cs)
-
-U2U Interaction : [U2U](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/u2u.cs)
-
-ZYTRON Interaction : [ZYTRON](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iZytron.cs)
-
-All Smart Contract Reader : [U2U - SKALE - ZYTRON](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
+RAWxCORE Project : [CORE](https://github.com/sindtext/reignalterworld/tree/CORE)
 
 Reign Alter World (RAW) is a Cross Platform Survival MMORPG with new gameplay and feature and revolutionary "inGame DeFi" which bring DeFi service we known,
 directly to the games to make a new ways the earn for player and token holder.
@@ -18,5 +12,13 @@ in RAW:Hunter [Season 1] we build : [OnChain]
 2. 1 Smartcontract for fair randomize number to determine how much is prize of our Daily Reward
 3. 1 Smartcontract for distributing AirDrop of our Quest Feature
 4. 1 Smartcontract each network for multichain payment option for inGame Purchase
+
+SKALE Interaction : [SKALE](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iSkale.cs)
+
+U2U Interaction : [U2U](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/u2u.cs)
+
+ZYTRON Interaction : [ZYTRON](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iZytron.cs)
+
+All Smart Contract Reader : [U2U - SKALE - ZYTRON](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
 
 
