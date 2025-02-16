@@ -1,3 +1,5 @@
+KAIA Project : [KAIA](https://github.com/sindtext/reignalterworld/tree/KAIA)
+
 SKALE Interaction : [SKALE](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iSkale.cs)
 
 U2U Interaction : [U2U](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/u2u.cs)
