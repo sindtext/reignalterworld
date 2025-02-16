@@ -2,11 +2,11 @@ using UnityEngine;
 using System.Collections;
 using Eidolon.SmartContracts;
 
-public static class KaiaFaucetManager
+public static class CoreFaucetManager
 {
     // This is your contract object, You can instantiate this in any other script if required.
-    // You can access this contract with KaiaFaucetManager.KaiaFaucetContract = new SmartContract(KaiaFaucetManager.Address, KaiaFaucetManager.ABI)
-    public static SmartContract KaiaFaucetContract;
+    // You can access this contract with CoreFaucetManager.CoreFaucetContract = new SmartContract(CoreFaucetManager.Address, CoreFaucetManager.ABI)
+    public static SmartContract CoreFaucetContract;
 
     // This is your contract address and be accessed with ContractManager.contractAddress
     public static string Address = "0xa68aeff9fdcd49f4f7447cd6c8eba72df03e41a9";
