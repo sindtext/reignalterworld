@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract KaiaGacha is AccessControl, ReentrancyGuard {
+contract CoreGacha is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address KaiaGachas;
+    address CoreGachas;
     
     bytes32 internal constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     bytes32 internal constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -29,7 +29,7 @@ contract KaiaGacha is AccessControl, ReentrancyGuard {
 
     constructor() payable {
         _grantRole(MANAGER_ROLE, msg.sender);
-        KaiaGachas = address(this);
+        CoreGachas = address(this);
     }
 
     function SignGacha() external nonReentrant {
@@ -91,6 +91,6 @@ contract KaiaGacha is AccessControl, ReentrancyGuard {
             return;
         }
         IERC20 _stucktoken = IERC20(token);
-        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(KaiaGachas));
+        _stucktoken.safeTransfer(_msgSender(), _stucktoken.balanceOf(CoreGachas));
     }
 }
