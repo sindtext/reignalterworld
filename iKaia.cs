@@ -44,7 +44,7 @@ public class iKaia : MonoBehaviour
     private void Start()
     {
         lm = FindObjectOfType<LobbyManager>();
-        provider = new JsonRpcProvider("https://rpc.ankr.com/klaytn_testnet");
+        provider = new JsonRpcProvider("https://public-en-kairos.node.kaia.io");
     }
 
     public IEnumerator kaiaContract()
