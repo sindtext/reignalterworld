@@ -2,17 +2,9 @@ SKALE Interaction : [SKALE](https://github.com/sindtext/reignalterworld/blob/Con
 
 U2U Interaction : [U2U](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/u2u.cs)
 
-EMC Interaction : [EMC](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iEMC.cs)
-
-TAIKO Interaction : [TAIKO](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iTaiko.cs)
-
-COSMOS Interaction : [ATOM](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iAtom.cs)
-
-METIS Interaction : [METIS](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iMetis.cs)
-
 ZYTRON Interaction : [ZYTRON](https://github.com/sindtext/reignalterworld/blob/Contract-Interaction/iZytron.cs)
 
-All Smart Contract Reader : [U2U - SKALE - EMC - TAIKO - ZYTRON - FLOW](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
+All Smart Contract Reader : [U2U - SKALE - ZYTRON](https://github.com/sindtext/reignalterworld/tree/Smart-Contract-Reader)
 
 Reign Alter World (RAW) is a Cross Platform Survival MMORPG with new gameplay and feature and revolutionary "inGame DeFi" which bring DeFi service we known,
 directly to the games to make a new ways the earn for player and token holder.
