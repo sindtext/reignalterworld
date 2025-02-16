@@ -44,7 +44,7 @@ public class iCore : MonoBehaviour
     private void Start()
     {
         lm = FindObjectOfType<LobbyManager>();
-        provider = new JsonRpcProvider("https://rpc.ankr.com/klaytn_testnet");
+        provider = new JsonRpcProvider("https://rpc.test2.btcs.network");
     }
 
     public IEnumerator coreContract()
@@ -53,12 +53,12 @@ public class iCore : MonoBehaviour
         signer = Signer.Load(eWallet.call.ID, eWallet.call.Key);
         yield return new WaitWhile(() => signer == "XxX");
 
-        coreWallet = new EmbeddedWallet(signer, "1001", provider);
+        coreWallet = new EmbeddedWallet(signer, "1114", provider);
         yield return new WaitWhile(() => coreWallet == null);
 
         if (core0Gas == null)
         {
-            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "1001", provider);
+            EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "1114", provider);
             yield return new WaitWhile(() => faucetwallet == null);
             core0Gas = new SmartContract(rawCoreFaucetManager.Address, rawCoreFaucetManager.ABI, faucetwallet);
             yield return new WaitWhile(() => core0Gas == null);
