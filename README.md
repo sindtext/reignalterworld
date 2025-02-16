@@ -5,10 +5,10 @@ from many revenue opportunity and various payment method.
 
 in RAW:Hunter [Season 1] we build : [OnChain]
 1. 2 Smartcontract for distributing Gas Token to subsidize Gas for Player
-   <br>[0xa68aeff9fdcd49f4f7447cd6c8eba72df03e41a9](https://kairos.kaiascan.io/address/0xa68aeff9fdcd49f4f7447cd6c8eba72df03e41a9)
-   <br>[0xc083d47e04a15847ff2afc3628e6cc02f7c8d8be](https://kairos.kaiascan.io/address/0xc083d47e04a15847ff2afc3628e6cc02f7c8d8be)
+   <br>[0x](https://kairos.kaiascan.io/address/0x)
+   <br>[0x](https://kairos.kaiascan.io/address/0x)
 2. 1 Smartcontract for fair randomize number to determine how much is prize of our Daily Reward
-   <br>[0xb13b9cb88fbd6d02202330667dac3af605eeedf3](https://kairos.kaiascan.io/address/0xb13b9cb88fbd6d02202330667dac3af605eeedf3)
+   <br>[0x](https://kairos.kaiascan.io/address/0x)
 4. 1 Smartcontract for distributing AirDrop of our Quest Feature
 5. 1 Smartcontract each network for multichain payment option for inGame Purchase
 
