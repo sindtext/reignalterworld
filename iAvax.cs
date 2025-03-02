@@ -20,7 +20,7 @@ public class iAvax : MonoBehaviour
     LobbyManager lm;
 
     public EmbeddedWallet avaxWallet;
-    SmartContract Kaia;
+    SmartContract Avax;
     SmartContract avax0Gas;
     SmartContract avaxGacha;
 
@@ -60,7 +60,7 @@ public class iAvax : MonoBehaviour
         {
             EmbeddedWallet faucetwallet = new EmbeddedWallet(eWallet.call.faucetWallet, "43113", provider);
             yield return new WaitWhile(() => faucetwallet == null);
-            avax0Gas = new SmartContract(rawKaiaFaucetManager.Address, rawKaiaFaucetManager.ABI, faucetwallet);
+            avax0Gas = new SmartContract(rawAvaxFaucetManager.Address, rawAvaxFaucetManager.ABI, faucetwallet);
             yield return new WaitWhile(() => avax0Gas == null);
         }
 
@@ -92,7 +92,7 @@ public class iAvax : MonoBehaviour
 
     public async void avaxFauchetCall(string receiver)
     {
-        string methodName = "KaiaPay";
+        string methodName = "AvaxPay";
 
         object[] arguments = new object[] {
             receiver
@@ -132,7 +132,7 @@ public class iAvax : MonoBehaviour
 
         try
         {
-            var status = await Kaia.Call<BigInteger>(methodName, arguments);
+            var status = await Avax.Call<BigInteger>(methodName, arguments);
             Debug.Log("Allowance Call Result: " + status);
             return status;
         }
@@ -154,7 +154,7 @@ public class iAvax : MonoBehaviour
 
         try
         {
-            var transactionHash = await Kaia.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Avax.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
             return transactionHash;
         }
@@ -176,7 +176,7 @@ public class iAvax : MonoBehaviour
 
         try
         {
-            var transactionHash = await Kaia.SendTransaction(methodName, gas: "100000", parameters: arguments);
+            var transactionHash = await Avax.SendTransaction(methodName, gas: "100000", parameters: arguments);
             Debug.Log("Transaction Hash: " + transactionHash);
         }
         catch (System.Exception e)
@@ -194,7 +194,7 @@ public class iAvax : MonoBehaviour
     IEnumerator checkingGacha()
     {
         yield return new WaitWhile(() => avaxWallet == null);
-        avaxGacha = new SmartContract(KaiaGachaManager.Address, KaiaGachaManager.ABI, avaxWallet);
+        avaxGacha = new SmartContract(AvaxGachaManager.Address, AvaxGachaManager.ABI, avaxWallet);
         checkedGacha();
     }
 
