@@ -2,6 +2,8 @@ RAWxKAIA Project : [KAIA](https://github.com/sindtext/reignalterworld/tree/KAIA)
 
 RAWxCORE Project : [CORE](https://github.com/sindtext/reignalterworld/tree/CORE)
 
+RAWxAVAX Project :
+
 Reign Alter World (RAW) is a Cross Platform Survival MMORPG with new gameplay and feature and revolutionary "inGame DeFi" which bring DeFi service we known,
 directly to the games to make a new ways the earn for player and token holder.
 We was focused to make sustainable political and economic systems to allowing player to have inGame even real life financial solution,
