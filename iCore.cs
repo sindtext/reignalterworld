@@ -69,22 +69,22 @@ public class iCore : MonoBehaviour
 
     public async void coreConnect()
     {
-        statusText.text = "Connecting to KAIA Network...";
+        statusText.text = "Connecting to CORE Network...";
 
         string accnt = coreWallet.GetAddress();
 
         var gasBalance = await provider.GetBalance(accnt);
         coreDisplay.transform.parent.gameObject.SetActive(true);
-        coreDisplay.text = ((Mathf.Floor((float)gasBalance * 1000000000)) / 1000000000).ToString("F9") + " KAIA";
+        coreDisplay.text = ((Mathf.Floor((float)gasBalance * 1000000000)) / 1000000000).ToString("F9") + " CORE";
 
         if (float.Parse(gasBalance.ToString()) > 0.56f)
         {
-            statusText.text = "KAIA Network Connected Successfully!";
+            statusText.text = "CORE Network Connected Successfully!";
             coreSign("Connect to Reign Alter World Store");
         }
         else
         {
-            statusText.text = "Claim KAIA Fauchet!";
+            statusText.text = "Claim CORE Fauchet!";
 
             coreFauchetCall(accnt);
         }
@@ -102,13 +102,13 @@ public class iCore : MonoBehaviour
         {
             var transactionHash = await core0Gas.SendTransaction(methodName, gas: "100000", parameters: arguments);
 
-            statusText.text = "KAIA distributed successfully.";
+            statusText.text = "CORE distributed successfully.";
             coreConnect();
         }
         catch (System.Exception e)
         {
             Debug.Log(e);
-            statusText.text = "KAIA distribution failed.";
+            statusText.text = "CORE distribution failed.";
         }
     }
 
@@ -118,7 +118,7 @@ public class iCore : MonoBehaviour
         // This will return a signature
         string signature = await coreWallet.SignMessage(message);
 
-        statusText.text = "KAIA Signed : " + message;
+        statusText.text = "CORE Signed : " + message;
     }
 
     public async Task<BigInteger> coreAllowance<BigInteger>(string owner, string spender)
